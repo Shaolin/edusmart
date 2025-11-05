@@ -1,0 +1,29 @@
+deployment:
+tasks:
+- task: “Deploy Laravel app”
+script: |
+#!/bin/bash
+set -e
+
+    # run composer if available
+    if command -v php >/dev/null 2>&1 && command -v composer >/dev/null 2>&1; then
+      composer install --no-dev --optimize-autoloader --no-interaction
+    fi
+
+    # ensure folders exist
+    mkdir -p ~/public_html
+    mkdir -p storage
+    mkdir -p bootstrap/cache
+
+    # permissions (best effort, may be restricted on some hosts)
+    chown -R $USER:$USER storage bootstrap/cache || true
+    chmod -R 775 storage bootstrap/cache || true
+
+    # sync public to public_html
+    rsync -a --delete ./public/ ~/public_html/
+
+    # create storage symlink in public_html
+    if [ -d storage/app/public ]; then
+      rm -rf ~/public_html/storage || true
+      ln -s /home/$USER/laravel-app/storage/app/public ~/public_html/storage || true
+    fi
