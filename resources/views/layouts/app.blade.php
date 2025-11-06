@@ -13,33 +13,35 @@
 
     {{-- ✅ Scripts & Styles: Vite for local, Build for production --}}
     @php
-        $isLocal = app()->environment('local');
-        $manifestPath = public_path('build/manifest.json');
+    $manifestPath = public_path('build/manifest.json');
+    $isLocal = app()->environment('local');
+@endphp
+
+@if (file_exists($manifestPath))
+    {{-- ✅ Production Build: load compiled assets --}}
+    @php
+        $manifest = json_decode(file_get_contents($manifestPath), true);
+        $appCss = $manifest['resources/css/app.css']['file'] ?? null;
+        $appJs = $manifest['resources/js/app.js']['file'] ?? null;
     @endphp
 
-    @if ($isLocal)
-        {{-- Local Development: use Vite --}}
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @elseif (file_exists($manifestPath))
-        {{-- Production Build: load from manifest.json --}}
-        @php
-            $manifest = json_decode(file_get_contents($manifestPath), true);
-            $appCss = $manifest['resources/css/app.css']['file'] ?? null;
-            $appJs = $manifest['resources/js/app.js']['file'] ?? null;
-        @endphp
-
-        @if ($appCss)
-            <link rel="stylesheet" href="{{ asset('build/' . $appCss) }}">
-        @endif
-
-        @if ($appJs)
-            <script src="{{ asset('build/' . $appJs) }}" defer></script>
-        @endif
-    @else
-        {{-- Fallback if build missing (prevents blank page) --}}
-        <link rel="stylesheet" href="{{ asset('css/app.css') }}">
-        <script src="{{ asset('js/app.js') }}" defer></script>
+    @if ($appCss)
+        <link rel="stylesheet" href="{{ asset('build/' . $appCss) }}">
     @endif
+    @if ($appJs)
+        <script src="{{ asset('build/' . $appJs) }}" defer></script>
+    @endif
+
+@elseif ($isLocal)
+    {{-- 🖥️ Local Development: use Vite --}}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+@else
+    {{-- 🔥 Fallback if no build or wrong env --}}
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <script src="{{ asset('js/app.js') }}" defer></script>
+@endif
+
 
 </head>
 
