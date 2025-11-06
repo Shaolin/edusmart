@@ -185,17 +185,17 @@ Route::resource('schools', SchoolController::class);
 
 
 Route::prefix('results')->group(function () {
-    Route::get('/', [ResultController::class, 'index'])->name('results.index');
+     Route::get('/', [ResultController::class, 'index'])->name('results.index');
 
-    Route::get('/select-class', [ResultController::class, 'selectClass'])->name('results.selectClass');
-    Route::get('/students/{class_id}', [ResultController::class, 'showStudents'])->name('results.showStudents');
-    Route::get('/create/{student_id}', [ResultController::class, 'createResult'])->name('results.createResult');
-    Route::post('/store', [ResultController::class, 'storeResult'])->name('results.storeResult');
+     Route::get('/select-class', [ResultController::class, 'selectClass'])->name('results.selectClass');
+    // Route::get('/students/{class_id}', [ResultController::class, 'showStudents'])->name('results.showStudents');
+     Route::get('/create/{student_id}', [ResultController::class, 'createResult'])->name('results.createResult');
+     Route::post('/store', [ResultController::class, 'storeResult'])->name('results.storeResult');
 
     // 👇 New routes for managing results
-    Route::get('/{id}/edit', [ResultController::class, 'edit'])->name('results.edit');
-    Route::put('/{id}', [ResultController::class, 'update'])->name('results.update');
-    Route::delete('/{id}', [ResultController::class, 'destroy'])->name('results.destroy');
+     Route::get('/{id}/edit', [ResultController::class, 'edit'])->name('results.edit');
+     Route::put('/{id}', [ResultController::class, 'update'])->name('results.update');
+     Route::delete('/{id}', [ResultController::class, 'destroy'])->name('results.destroy');
     // In web.php
 Route::get('/results/view/{student_id}/{term_id}/{session_id}', [ResultController::class, 'viewResult'])->name('results.view');
 Route::get('/results/{student_id}/{term_id}/{session_id}/generate', [ResultController::class, 'generate'])
