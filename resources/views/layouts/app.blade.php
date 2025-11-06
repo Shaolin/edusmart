@@ -11,14 +11,43 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-    <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- ✅ Scripts & Styles: Vite for local, Build for production --}}
+    @php
+        $isLocal = app()->environment('local');
+        $manifestPath = public_path('build/manifest.json');
+    @endphp
+
+    @if ($isLocal)
+        {{-- Local Development: use Vite --}}
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @elseif (file_exists($manifestPath))
+        {{-- Production Build: load from manifest.json --}}
+        @php
+            $manifest = json_decode(file_get_contents($manifestPath), true);
+            $appCss = $manifest['resources/css/app.css']['file'] ?? null;
+            $appJs = $manifest['resources/js/app.js']['file'] ?? null;
+        @endphp
+
+        @if ($appCss)
+            <link rel="stylesheet" href="{{ asset('build/' . $appCss) }}">
+        @endif
+
+        @if ($appJs)
+            <script src="{{ asset('build/' . $appJs) }}" defer></script>
+        @endif
+    @else
+        {{-- Fallback if build missing (prevents blank page) --}}
+        <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+        <script src="{{ asset('js/app.js') }}" defer></script>
+    @endif
+
 </head>
 
 <body class="font-sans antialiased bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+
     <div class="min-h-screen flex flex-col">
 
-        <!-- Page Heading -->
+        {{-- Page Heading --}}
         @if (isset($header))
             <header class="bg-white shadow-sm border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
                 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -29,43 +58,41 @@
             </header>
         @endif
 
-        <!-- Page Content -->
+        {{-- Page Content --}}
         <main class="flex-1 max-w-7xl mx-auto w-full py-8 px-4 sm:px-6 lg:px-8 pb-32">
             {{ $slot }}
         </main>
     </div>
 
-    <!-- 🔙 Back to Dashboard Button (Above Home button) -->
+    {{-- 🔙 Back to Dashboard --}}
     @auth
-    <a href="{{ route('dashboard') }}"
-        class="fixed bottom-20 left-6 inline-flex items-center px-5 py-3 text-sm font-medium text-white bg-indigo-600 rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition">
-        ⬅️ Back to Dashboard
-    </a>
+        <a href="{{ route('dashboard') }}"
+           class="fixed bottom-20 left-6 inline-flex items-center px-5 py-3 text-sm font-medium text-white bg-indigo-600 rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition">
+            ⬅️ Back to Dashboard
+        </a>
     @endauth
 
-    <!-- 🏠 Back to Home Button -->
-    <a href="{{ url('/') }}" 
-        class="fixed bottom-6 left-6 inline-flex items-center px-5 py-3 text-sm font-medium text-white bg-gray-700 rounded-full shadow-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition">
+    {{-- 🏠 Home Button --}}
+    <a href="{{ url('/') }}"
+       class="fixed bottom-6 left-6 inline-flex items-center px-5 py-3 text-sm font-medium text-white bg-gray-700 rounded-full shadow-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition">
         🏠 Home
     </a>
 
-    <!-- 🌙 Floating Dark Mode Toggle -->
+    {{-- 🌙 Dark Mode Toggle --}}
     <button id="theme-toggle"
         class="fixed bottom-6 right-6 p-3 rounded-full bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 shadow-md transition">
         🌙
     </button>
 
-    <!-- 🌗 Dark/Light Script -->
+    {{-- 🌗 Dark Mode Script --}}
     <script>
         const html = document.documentElement;
         const themeToggle = document.getElementById("theme-toggle");
 
-        // Apply saved theme from localStorage
         if (localStorage.getItem("theme") === "dark") {
             html.classList.add("dark");
         }
 
-        // Toggle theme
         themeToggle.addEventListener("click", () => {
             html.classList.toggle("dark");
             localStorage.setItem("theme", html.classList.contains("dark") ? "dark" : "light");
