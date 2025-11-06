@@ -1,19 +1,28 @@
-/.phpunit.cache
+# Laravel
+/vendor
 /node_modules
-
-/public/hot
 /public/storage
 /storage/*.key
-/vendor
 .env
 .env.backup
 .env.production
 .phpunit.result.cache
-Homestead.json
-Homestead.yaml
-auth.json
-npm-debug.log
-yarn-error.log
+/.phpunit.cache
+
+# IDE & System Files
 /.fleet
 /.idea
 /.vscode
+.DS_Store
+Thumbs.db
+
+# Logs & Debug
+npm-debug.log
+yarn-error.log
+auth.json
+Homestead.json
+Homestead.yaml
+
+# Vite
+# DO NOT IGNORE public/build – required for production!
+
