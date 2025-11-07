@@ -11,40 +11,29 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-    {{-- ✅ Scripts & Styles: Vite for local, Build for production --}}
-    @php
-    $manifestPath = public_path('build/manifest.json');
-    $isLocal = app()->environment('local');
-@endphp
+    <!-- Tailwind CSS via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
-@if (file_exists($manifestPath))
-    {{-- ✅ Production Build: load compiled assets --}}
-    @php
-        $manifest = json_decode(file_get_contents($manifestPath), true);
-        $appCss = $manifest['resources/css/app.css']['file'] ?? null;
-        $appJs = $manifest['resources/js/app.js']['file'] ?? null;
-    @endphp
+    <!-- Optional custom CSS -->
+    <style>
+        .fade-in {
+            animation: fadeIn 1.2s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-    @if ($appCss)
-        <link rel="stylesheet" href="{{ asset('build/' . $appCss) }}">
-    @endif
-    @if ($appJs)
-        <script src="{{ asset('build/' . $appJs) }}" defer></script>
-    @endif
-
-@elseif ($isLocal)
-    {{-- 🖥️ Local Development: use Vite --}}
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-@else
-    {{-- 🔥 Fallback if no build or wrong env --}}
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
-    <script src="{{ asset('js/app.js') }}" defer></script>
-@endif
-
-
+        /* Mobile menu animation */
+        .mobile-menu {
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(-100%);
+        }
+        .mobile-menu.open {
+            transform: translateX(0);
+        }
+    </style>
 </head>
-
 <body class="font-sans antialiased bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
 
     <div class="min-h-screen flex flex-col">
@@ -86,7 +75,7 @@
         🌙
     </button>
 
-    {{-- 🌗 Dark Mode Script --}}
+    {{-- Mobile menu toggle JS --}}
     <script>
         const html = document.documentElement;
         const themeToggle = document.getElementById("theme-toggle");
@@ -99,7 +88,16 @@
             html.classList.toggle("dark");
             localStorage.setItem("theme", html.classList.contains("dark") ? "dark" : "light");
         });
-    </script>
 
+        // Mobile menu open/close
+        const menuBtn = document.getElementById('menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const closeMenu = document.getElementById('close-menu');
+
+        if(menuBtn && mobileMenu && closeMenu){
+            menuBtn.addEventListener('click', () => mobileMenu.classList.add('open'));
+            closeMenu.addEventListener('click', () => mobileMenu.classList.remove('open'));
+        }
+    </script>
 </body>
 </html>
