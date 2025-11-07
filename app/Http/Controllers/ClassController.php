@@ -46,36 +46,51 @@ class ClassController extends Controller
 
     //     return view('classes.show', compact('class'));
     // }
-    public function show($id)
-    {
-        $class = SchoolClass::with('fees')->findOrFail($id);
+    public function show(Request $request, $id)
+{
+     $class = SchoolClass::with(['formTeacher.user', 'fees'])->findOrFail($id);
+    // $class = SchoolClass::with([
+    //     'students.feePayments',  // load fee payments
+    //     'fees',                  // load fees for this class
+    //     'formTeacher.user'
+    // ])->findOrFail($id);
+
+    // Filter by fee status
+    $feeFilter = $request->query('fee_status', 'all'); // all by default
+
+    // Latest fee for this class
+    $latestFee = $class->fees->max('amount') ?? 0;
+
+    // Base query for students
+    $studentsQuery = $class->students()->with('feePayments');
+
+    // Apply fee filter
+    $studentsQuery->where(function($query) use ($feeFilter, $latestFee) {
+        if ($feeFilter === 'fully-paid') {
+            $query->whereHas('feePayments', function($q) use ($latestFee) {
+                $q->selectRaw('student_id, SUM(amount) as total_paid')
+                  ->groupBy('student_id')
+                  ->havingRaw('SUM(amount) >= ?', [$latestFee]);
+            });
+        } elseif ($feeFilter === 'partial') {
+            $query->whereHas('feePayments', function($q) use ($latestFee) {
+                $q->selectRaw('student_id, SUM(amount) as total_paid')
+                  ->groupBy('student_id')
+                  ->havingRaw('SUM(amount) < ? AND SUM(amount) > 0', [$latestFee]);
+            });
+        } elseif ($feeFilter === 'unpaid') {
+            $query->whereDoesntHave('feePayments');
+        }
+    });
+
+    // Paginate results (20 per page)
+    $students = $studentsQuery->paginate(20)->withQueryString();
+
+    return view('classes.show', compact('class', 'students', 'latestFee', 'feeFilter'));
+}
+
     
-        // Get students of this class with fee payment summary
-        $students = Student::where('class_id', $id)
-            ->with(['feePayments' => function ($q) {
-                $q->orderBy('payment_date', 'desc');
-            }])
-            ->paginate(20);
-    
-        // Pre-calculate the total fee amount for this class
-        $classTotalFee = $class->fees->sum('amount');
-    
-        // Map additional computed fields (without breaking pagination)
-        $students->getCollection()->transform(function ($student) use ($classTotalFee) {
-            $totalPaid = $student->feePayments->sum('amount');
-            $balance = max($classTotalFee - $totalPaid, 0);
-            $lastPayment = $student->feePayments->first();
-    
-            $student->total_fee = $classTotalFee;
-            $student->total_paid = $totalPaid;
-            $student->balance = $balance;
-            $student->last_payment_date = $lastPayment ? $lastPayment->payment_date : null;
-    
-            return $student;
-        });
-    
-        return view('classes.show', compact('class', 'students', 'classTotalFee'));
-    }
+
     
 
 
