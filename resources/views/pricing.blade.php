@@ -102,7 +102,7 @@
     <!-- Standard Plan -->
     <div class="glass p-8 rounded-2xl border border-gray-800 hover:border-blue-500 transition duration-300 text-center">
       <h3 class="text-2xl font-semibold text-blue-400 mb-2">Standard</h3>
-      <p class="text-gray-400 mb-6">₦15,000 / term</p>
+      <p class="text-gray-400 mb-6">₦20,000 / term</p>
       <ul class="text-gray-300 text-sm space-y-3 mb-8">
         <li>✅ Manage students, fees & results</li>
         <li>✅ WhatsApp results & receipts</li>
