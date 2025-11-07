@@ -4,15 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Welcome | EduSmart</title>
-  @vite('resources/css/app.css')
+  <!-- Load Tailwind via CDN like your working pages -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    body {
+      background: linear-gradient(135deg, #0a0f1c, #0b1730);
+      color: #e4e7eb;
+      font-family: 'Inter', sans-serif;
     }
     .fade-in {
       animation: fadeIn 1s ease-out forwards;
     }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Mobile menu animation */
     .mobile-menu {
       transition: transform 0.3s ease-in-out;
       transform: translateX(-100%);
@@ -22,13 +30,13 @@
     }
   </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen font-sans flex flex-col">
+<body class="min-h-screen flex flex-col">
 
-  <!-- 🔹 Navbar -->
+  <!-- Navbar -->
   <nav class="bg-gray-900 bg-opacity-70 backdrop-blur-md border-b border-gray-800 px-6 py-4 flex justify-between items-center relative">
     <a href="/" class="text-blue-400 text-2xl font-bold">EduSmart</a>
 
-    <!-- Desktop Links -->
+    <!-- Desktop Menu -->
     <div class="hidden md:flex space-x-6 text-gray-300 items-center">
       <a href="/" class="text-blue-400 font-semibold">Home</a>
       <a href="/features" class="hover:text-blue-400">Features</a>
@@ -85,7 +93,7 @@
     </div>
   </nav>
 
-  <!-- 🔹 Hero Section -->
+  <!-- Hero Section -->
   <main class="flex-grow flex items-center justify-center px-6 fade-in">
     <div class="text-center space-y-6">
       <div class="flex justify-center mb-4">
@@ -127,6 +135,7 @@
     </div>
   </main>
 
+  <!-- Footer -->
   <footer class="text-gray-500 text-sm text-center py-6 border-t border-gray-800">
     &copy; {{ date('Y') }} EduSmart · Powered by Sawo Software Systems
   </footer>
