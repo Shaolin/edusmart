@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -17,10 +17,8 @@
     @endphp
 
     @if ($isLocal)
-        {{-- Local Development: Vite --}}
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @elseif (file_exists($manifestPath))
-        {{-- Production Build: use compiled assets --}}
         @php
             $manifest = json_decode(file_get_contents($manifestPath), true);
             $appCss = $manifest['resources/css/app.css']['file'] ?? null;
@@ -28,32 +26,48 @@
         @endphp
 
         @if ($appCss)
-            <link rel="stylesheet" href="{{ asset('build/' . $appCss) }}">
+            <link rel="stylesheet" href="{{ asset('build/'.$appCss) }}">
         @endif
         @if ($appJs)
-            <script src="{{ asset('build/' . $appJs) }}" defer></script>
+            <script src="{{ asset('build/'.$appJs) }}" defer></script>
         @endif
     @else
-        {{-- Fallback (prevents blank page if build missing) --}}
         <link rel="stylesheet" href="{{ asset('css/app.css') }}">
         <script src="{{ asset('js/app.js') }}" defer></script>
     @endif
-
 </head>
-<body class="font-sans antialiased bg-gray-900 text-white">
-    <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0">
 
+<body class="font-sans antialiased bg-gray-900 text-gray-100">
+
+    <div class="min-h-screen flex flex-col justify-center items-center px-4">
+        
+        <!-- Logo / Title -->
         <div class="text-center mb-8">
             <a href="/" class="inline-block">
-                <div class="bg-blue-600 text-white text-3xl font-bold px-8 py-3 rounded-2xl shadow-lg hover:bg-blue-700 transition">
+                <div class="bg-blue-600 text-white text-3xl font-bold px-8 py-3 rounded-2xl shadow-md hover:bg-blue-700 transition">
                     SmartEdu
                 </div>
             </a>
         </div>
 
-        <div class="w-full sm:max-w-md mt-6 px-6 py-6 bg-gray-800 shadow-lg overflow-hidden sm:rounded-2xl border border-gray-700">
+        <!-- Auth Card -->
+        <div class="w-full sm:max-w-md px-6 py-8  shadow-xl sm:rounded-2xl border border-gray-200 text-gray-900">
+            <style>
+                label {
+                    color: #2563eb; /* Tailwind blue-600 */
+                    font-weight: 500;
+                }
+            </style>
+        
             {{ $slot }}
         </div>
+        
+        
+        <!-- Home Link -->
+        <a href="{{ url('/') }}" class="mt-6 text-sm text-gray-400 hover:text-gray-200 transition">
+            ← Back to Home
+        </a>
     </div>
+
 </body>
 </html>
