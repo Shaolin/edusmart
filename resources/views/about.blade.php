@@ -78,7 +78,7 @@
   <section class="flex flex-col items-center text-center py-16 fade-in px-6">
     <h1 class="text-4xl md:text-5xl font-bold text-blue-400 mb-4">About SmartEdu</h1>
     <p class="text-gray-400 max-w-2xl">
-      Empowering schools with technology — SmartEdu by Sawo Technologies helps schools simplify fees, results, and communication all in one system.
+      Empowering schools with technology — SmartEdu by Sawo Software Systems helps schools simplify fees, results, and communication all in one system.
     </p>
   </section>
 
@@ -86,7 +86,7 @@
   <section class="max-w-4xl mx-auto px-6 md:px-12 py-10 fade-in">
     <h2 class="text-2xl font-semibold text-blue-300 mb-4">Who We Are</h2>
     <p class="text-gray-300 leading-relaxed">
-      SmartEdu is an innovation by <span class="text-blue-400 font-semibold">Sawo Technologies</span>, created to help schools move away from manual record keeping and adopt modern digital tools.
+      SmartEdu is an innovation by <span class="text-blue-400 font-semibold">Sawo Software Systems</span>, created to help schools move away from manual record keeping and adopt modern digital tools.
       Our goal is to make administration simple, efficient, and affordable for schools of all sizes.
     </p>
   </section>

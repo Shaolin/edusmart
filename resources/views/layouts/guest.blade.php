@@ -7,55 +7,73 @@
 
     <title>{{ config('app.name', 'SmartEdu') }}</title>
 
-    <!-- Tailwind CDN - no build step required -->
+    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Optional: configure Tailwind CDN for dark mode if you use it -->
     <script>
-      // you can enable dark mode using class strategy if you prefer:
-      tailwind.config = { darkMode: 'class' }
+        tailwind.config = { darkMode: 'class' }
     </script>
 
-    <!-- If you still have a custom app.css/js in public, keep them as optional fallbacks -->
-    @if (file_exists(public_path('css/app.css')))
-        <link rel="stylesheet" href="{{ asset('css/app.css') }}">
-    @endif
-    @if (file_exists(public_path('js/app.js')))
-        <script src="{{ asset('js/app.js') }}" defer></script>
-    @endif
-
     <style>
-      /* small safety: ensure auth card is visible even if dark class behaves differently */
-      body { background-color: #111827; color: #f9fafb; }
+        body { background-color: #111827; color: #f9fafb; }
     </style>
 </head>
-<body class="font-sans antialiased bg-gray-900 text-gray-100">
 
-    <div class="min-h-screen flex flex-col justify-center items-center px-4">
-        <!-- Logo / Title -->
-        <div class="text-center mb-8">
-            <a href="/" class="inline-block">
-                <div class="bg-blue-600 text-white text-3xl font-bold px-8 py-3 rounded-2xl shadow-md hover:bg-blue-700 transition">
-                    SmartEdu
-                </div>
-            </a>
-        </div>
+<body class="font-sans antialiased min-h-screen flex flex-col justify-center items-center px-4">
 
-        <!-- Auth Card -->
-        <div class="w-full sm:max-w-md px-6 py-8 text-gray-900 shadow-xl sm:rounded-2xl border border-gray-200">
-            <style>
-                /* label accent for accessibility */
-                label { color: #2563eb; font-weight: 500; }
-            </style>
-
-            {{ $slot }}
-        </div>
-
-        <!-- Home Link -->
-        <a href="{{ url('/') }}" class="mt-6 text-sm text-gray-400 hover:text-gray-200 transition">
-            ← Back to Home
+    <!-- Logo -->
+    <div class="text-center mb-10">
+        <a href="/" class="inline-block">
+            <div class="bg-blue-600 text-white text-3xl font-bold px-8 py-3 rounded-2xl shadow-md hover:bg-blue-700 transition">
+                SmartEdu
+            </div>
         </a>
     </div>
+
+    <!-- Auth Card -->
+    <div class="w-full sm:max-w-md px-6 py-8 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
+                rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+
+        {{-- ✅ Flash Messages --}}
+        @if (session('success'))
+            <div class="mb-4 p-4 rounded-lg bg-green-100 text-green-800 border border-green-300 text-sm font-medium">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="mb-4 p-4 rounded-lg bg-red-100 text-red-800 border border-red-300 text-sm font-medium">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="mb-4 p-4 rounded-lg bg-red-100 text-red-800 border border-red-300 text-sm font-medium">
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <!-- Auth Form Slot -->
+        {{ $slot }}
+
+        {{-- Optional: Forgot Password --}}
+        @if (Route::has('password.request'))
+            <div class="mt-4 text-right">
+                <a href="{{ route('password.request') }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline transition">
+                    Forgot your password?
+                </a>
+            </div>
+        @endif
+
+    </div>
+
+    <!-- Home Link -->
+    <a href="{{ url('/') }}" class="mt-6 text-sm text-gray-400 hover:text-gray-200 transition">
+        ← Back to Home
+    </a>
 
 </body>
 </html>
