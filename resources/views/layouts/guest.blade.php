@@ -1,24 +1,16 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
-
     <title>{{ config('app.name', 'SmartEdu') }}</title>
-
-    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = { darkMode: 'class' }
     </script>
-
-    <style>
-        body { background-color: #111827; color: #f9fafb; }
-    </style>
 </head>
-
-<body class="font-sans antialiased min-h-screen flex flex-col justify-center items-center px-4">
+<body class="font-sans antialiased min-h-screen flex flex-col justify-center items-center px-4 transition-colors duration-300">
 
     <!-- Logo -->
     <div class="text-center mb-10">
@@ -31,7 +23,7 @@
 
     <!-- Auth Card -->
     <div class="w-full sm:max-w-md px-6 py-8 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
-                rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+                rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transition-colors duration-300">
 
         {{-- ✅ Flash Messages --}}
         @if (session('success'))
@@ -56,17 +48,8 @@
             </div>
         @endif
 
-        <!-- Auth Form Slot -->
+        <!-- Slot for page content (login/register form) -->
         {{ $slot }}
-
-        {{-- Optional: Forgot Password --}}
-        @if (Route::has('password.request'))
-            <div class="mt-4 text-right">
-                <a href="{{ route('password.request') }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline transition">
-                    Forgot your password?
-                </a>
-            </div>
-        @endif
 
     </div>
 
@@ -75,5 +58,32 @@
         ← Back to Home
     </a>
 
+    <!-- 🌙 Dark Mode Toggle -->
+    <button id="theme-toggle"
+        class="fixed bottom-6 right-6 p-3 rounded-full bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 shadow-md transition">
+        🌙
+    </button>
+
+    <script>
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+
+        // Load saved theme
+        if(localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            html.classList.add('dark');
+        } else {
+            html.classList.remove('dark');
+        }
+
+        // Toggle theme on button click
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            if(html.classList.contains('dark')) {
+                localStorage.setItem('theme', 'dark');
+            } else {
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    </script>
 </body>
 </html>
