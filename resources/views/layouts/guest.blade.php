@@ -11,30 +11,9 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-    @php
-        $isLocal = app()->environment('local');
-        $manifestPath = public_path('build/manifest.json');
-    @endphp
-
-    @if ($isLocal)
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @elseif (file_exists($manifestPath))
-        @php
-            $manifest = json_decode(file_get_contents($manifestPath), true);
-            $appCss = $manifest['resources/css/app.css']['file'] ?? null;
-            $appJs = $manifest['resources/js/app.js']['file'] ?? null;
-        @endphp
-
-        @if ($appCss)
-            <link rel="stylesheet" href="{{ asset('build/'.$appCss) }}">
-        @endif
-        @if ($appJs)
-            <script src="{{ asset('build/'.$appJs) }}" defer></script>
-        @endif
-    @else
-        <link rel="stylesheet" href="{{ asset('css/app.css') }}">
-        <script src="{{ asset('js/app.js') }}" defer></script>
-    @endif
+    <!-- ✅ Direct CSS & JS for Shared Hosting (NO VITE) -->
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <script src="{{ asset('js/app.js') }}" defer></script>
 </head>
 
 <body class="font-sans antialiased bg-gray-900 text-gray-100">
@@ -51,18 +30,14 @@
         </div>
 
         <!-- Auth Card -->
-        <div class="w-full sm:max-w-md px-6 py-8  shadow-xl sm:rounded-2xl border border-gray-200 text-gray-900">
+        <div class="w-full sm:max-w-md px-6 py-8 bg-white dark:bg-gray-800 shadow-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100">
             <style>
-                label {
-                    color: #2563eb; /* Tailwind blue-600 */
-                    font-weight: 500;
-                }
+                label { color: #2563eb; font-weight: 500; }
             </style>
         
             {{ $slot }}
         </div>
-        
-        
+
         <!-- Home Link -->
         <a href="{{ url('/') }}" class="mt-6 text-sm text-gray-400 hover:text-gray-200 transition">
             ← Back to Home
