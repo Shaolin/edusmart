@@ -15,6 +15,7 @@ class Fee extends Model
         'amount',
         'term',
         'session',
+        'school_id',
     ];
 
     // Relationship: belongs to a class
@@ -27,5 +28,10 @@ class Fee extends Model
     public function studentFees()
     {
         return $this->hasMany(StudentFee::class);
+    }
+    
+    public function school()
+    {
+        return $this->belongsTo(School::class);
     }
 }

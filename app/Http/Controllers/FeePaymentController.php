@@ -12,207 +12,197 @@ use Illuminate\Support\Facades\Auth;
 class FeePaymentController extends Controller
 {
     /**
-     * Restrict access to admins only
-     */
-    private function authorizeAdmin()
-    {
-        if (Auth::user()->role !== 'admin') {
-            abort(403, 'Unauthorized');
-        }
-    }
-
-    /**
-     * Display all fee payments (with search)
+     * Display all fee payments (admin only)
      */
     public function index(Request $request)
     {
-        $this->authorizeAdmin();
-    
+        $user = Auth::user();
+
         $search = $request->input('student_name');
-    
+
         $payments = FeePayment::with(['student.schoolClass', 'fee'])
+            ->whereHas('student', fn($q) => $q->where('school_id', $user->school_id))
             ->when($search, function ($query, $search) {
-                $query->whereHas('student', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%");
-                })
-                ->orWhereHas('student.schoolClass', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%");
-                })
-                ->orWhere('session', 'like', "%{$search}%");
+                $query->whereHas('student', fn($q) => $q->where('name', 'like', "%{$search}%"))
+                      ->orWhereHas('student.schoolClass', fn($q) => $q->where('name', 'like', "%{$search}%"))
+                      ->orWhere('session', 'like', "%{$search}%");
             })
             ->orderBy('payment_date', 'desc')
             ->paginate(10);
-    
+
         return view('fee_payments.index', compact('payments', 'search'));
     }
-    
 
     /**
-     * Show the form to record a new payment
+     * Show form to record a new payment
      */
     public function create()
     {
-        $this->authorizeAdmin();
+        $user = Auth::user();
 
-        $classes = SchoolClass::all();
-        $fees = Fee::with('schoolClass')->get();
+        $classes = SchoolClass::where('school_id', $user->school_id)->get();
+        $fees = Fee::where('school_id', $user->school_id)->with('schoolClass')->get();
 
         return view('fee_payments.create', compact('classes', 'fees'));
     }
 
     /**
-     * AJAX: Get students belonging to a specific class
+     * AJAX: Get students for a class
      */
     public function getStudentsByClass($classId)
     {
-        $students = Student::where('class_id', $classId)->get();
+        $user = Auth::user();
+
+        $students = Student::where('class_id', $classId)
+            ->where('school_id', $user->school_id)
+            ->get();
 
         return response()->json($students);
     }
 
     /**
-     * Store a new payment record
+     * Store a new payment
      */
     public function store(Request $request)
-{
-    $request->validate([
-        'student_id' => 'required|exists:students,id',
-        'fee_id' => 'required|exists:fees,id',
-        'amount' => 'required|numeric|min:1',
-        'session' => 'required|string',
-        'term' => 'required|string',
-        'payment_date' => 'required|date',
-    ]);
+    {
+        $user = Auth::user();
 
-    $fee = Fee::findOrFail($request->fee_id);
+        $request->validate([
+            'student_id' => 'required|exists:students,id',
+            'fee_id'     => 'required|exists:fees,id',
+            'amount'     => 'required|numeric|min:1',
+            'session'    => 'required|string',
+            'term'       => 'required|string',
+            'payment_date' => 'required|date',
+        ]);
 
-    // Calculate total amount paid so far for this student and fee
-    $totalPaid = FeePayment::where('student_id', $request->student_id)
-        ->where('fee_id', $request->fee_id)
-        ->sum('amount');
+        $student = Student::where('id', $request->student_id)
+            ->where('school_id', $user->school_id)
+            ->firstOrFail();
 
-    // Compute new balance
-    $balance = $fee->amount - ($totalPaid + $request->amount);
+        $fee = Fee::where('id', $request->fee_id)
+            ->where('school_id', $user->school_id)
+            ->firstOrFail();
 
-    // Prevent overpayment
-    if ($balance < 0) {
-        return back()->withErrors(['amount' => 'Amount exceeds total fee for this student.']);
+        $totalPaid = FeePayment::where('student_id', $student->id)
+            ->where('fee_id', $fee->id)
+            ->sum('amount');
+
+        $balance = $fee->amount - ($totalPaid + $request->amount);
+
+        if ($balance < 0) {
+            return back()->withErrors(['amount' => 'Amount exceeds total fee for this student.']);
+        }
+
+        FeePayment::create([
+            'student_id' => $student->id,
+            'fee_id'     => $fee->id,
+            'amount'     => $request->amount,
+            'session'    => $request->session,
+            'term'       => $request->term,
+            'payment_date' => $request->payment_date,
+            'balance_after_payment' => $balance,
+        ]);
+
+        return redirect()->route('fee_payments.index')
+                         ->with('success', 'Payment recorded successfully!');
     }
 
-    // Save payment
-    FeePayment::create([
-        'student_id' => $request->student_id,
-        'fee_id' => $request->fee_id,
-        'amount' => $request->amount,
-        'session' => $request->session,
-        'term' => $request->term,
-        'payment_date' => $request->payment_date,
-        'balance_after_payment' => $balance,
-    ]);
-
-    return redirect()->route('fee_payments.index')
-        ->with('success', 'Payment recorded successfully!');
-}
-
-
     /**
-     * Show all payments made by a particular student
+     * Show payments for a specific student
      */
     public function show($studentId)
     {
-        $this->authorizeAdmin();
-    
-        $student = Student::with('schoolClass')->findOrFail($studentId);
-    
-        // Get all payments made by the student
+        $user = Auth::user();
+
+        $student = Student::with('schoolClass')
+            ->where('id', $studentId)
+            ->where('school_id', $user->school_id)
+            ->firstOrFail();
+
         $payments = FeePayment::with('fee.schoolClass')
-            ->where('student_id', $studentId)
+            ->where('student_id', $student->id)
             ->orderBy('payment_date', 'desc')
             ->get();
-    
-        // Get all unique fees the student has paid for (to avoid counting same fee multiple times)
+
         $feeIds = $payments->pluck('fee_id')->unique();
-    
-        // Sum only the original fee amounts once per fee type
-        $totalFees = Fee::whereIn('id', $feeIds)->sum('amount');
-    
-        // Total paid so far (sum of all partial payments)
+        $totalFees = Fee::whereIn('id', $feeIds)->where('school_id', $user->school_id)->sum('amount');
         $totalPaid = $payments->sum('amount');
-    
-        // Remaining balance (never less than 0)
         $balance = max($totalFees - $totalPaid, 0);
-    
+
         return view('fee_payments.show', compact('student', 'payments', 'totalFees', 'totalPaid', 'balance'));
     }
-    
+
     /**
- * Show the form for editing a specific payment
- */
-public function edit(FeePayment $feePayment)
-{
-    $this->authorizeAdmin();
+     * Edit a payment
+     */
+    public function edit(FeePayment $feePayment)
+    {
+        $user = Auth::user();
 
-    $feePayment->load(['student.schoolClass', 'fee']);
+        if ($feePayment->student->school_id !== $user->school_id || $feePayment->fee->school_id !== $user->school_id) {
+            abort(403, 'Unauthorized');
+        }
 
-    return view('fee_payments.edit', [
-        'payment' => $feePayment
-    ]);
-}
+        $feePayment->load(['student.schoolClass', 'fee']);
 
-/**
- * Update a specific payment
- */
-public function update(Request $request, FeePayment $feePayment)
-{
-    $this->authorizeAdmin();
-
-    $request->validate([
-        'amount' => 'required|numeric|min:1',
-        'session' => 'required|string',
-        'term' => 'required|string',
-    ]);
-
-    $fee = Fee::findOrFail($feePayment->fee_id);
-
-    // Calculate total amount already paid (excluding this record)
-    $totalPaidBefore = FeePayment::where('student_id', $feePayment->student_id)
-        ->where('fee_id', $feePayment->fee_id)
-        ->where('id', '!=', $feePayment->id)
-        ->sum('amount');
-
-    // Compute new total and balance
-    $newTotalPaid = $totalPaidBefore + $request->amount;
-    $newBalance = $fee->amount - $newTotalPaid;
-
-    if ($newBalance < 0) {
-        return back()->withErrors(['amount' => 'Amount exceeds total fee for this student.']);
+        return view('fee_payments.edit', ['payment' => $feePayment]);
     }
 
-    // Update record
-    $feePayment->update([
-        'amount' => $request->amount,
-        'session' => $request->session,
-        'term' => $request->term,
-        'balance_after_payment' => $newBalance,
-    ]);
+    /**
+     * Update a payment
+     */
+    public function update(Request $request, FeePayment $feePayment)
+    {
+        $user = Auth::user();
 
-    return redirect()
-        ->route('fee_payments.index')
-        ->with('success', 'Payment updated successfully!');
-}
+        if ($feePayment->student->school_id !== $user->school_id || $feePayment->fee->school_id !== $user->school_id) {
+            abort(403, 'Unauthorized');
+        }
 
+        $request->validate([
+            'amount'  => 'required|numeric|min:1',
+            'session' => 'required|string',
+            'term'    => 'required|string',
+        ]);
+
+        $fee = $feePayment->fee;
+        $totalPaidBefore = FeePayment::where('student_id', $feePayment->student_id)
+            ->where('fee_id', $feePayment->fee_id)
+            ->where('id', '!=', $feePayment->id)
+            ->sum('amount');
+
+        $newBalance = $fee->amount - ($totalPaidBefore + $request->amount);
+
+        if ($newBalance < 0) {
+            return back()->withErrors(['amount' => 'Amount exceeds total fee for this student.']);
+        }
+
+        $feePayment->update([
+            'amount' => $request->amount,
+            'session' => $request->session,
+            'term' => $request->term,
+            'balance_after_payment' => $newBalance,
+        ]);
+
+        return redirect()->route('fee_payments.index')
+                         ->with('success', 'Payment updated successfully!');
+    }
 
     /**
-     * Delete a payment record
+     * Delete a payment
      */
     public function destroy(FeePayment $feePayment)
     {
-        $this->authorizeAdmin();
+        $user = Auth::user();
+
+        if ($feePayment->student->school_id !== $user->school_id || $feePayment->fee->school_id !== $user->school_id) {
+            abort(403, 'Unauthorized');
+        }
 
         $feePayment->delete();
 
-        return redirect()
-            ->route('fee_payments.index')
-            ->with('success', 'Payment deleted successfully!');
+        return redirect()->route('fee_payments.index')
+                         ->with('success', 'Payment deleted successfully!');
     }
 }

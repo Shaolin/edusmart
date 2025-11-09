@@ -14,9 +14,14 @@ class FeeController extends Controller
      */
     public function index()
     {
-        $this->authorizeAdmin();
+        $user = Auth::user();
 
-        $fees = Fee::with('schoolClass')->latest()->paginate(15);
+        // Only fees for the admin's school
+        $fees = Fee::with('schoolClass')
+                    ->where('school_id', $user->school_id)
+                    ->latest()
+                    ->paginate(15);
+
         return view('fees.index', compact('fees'));
     }
 
@@ -25,9 +30,10 @@ class FeeController extends Controller
      */
     public function create()
     {
-        $this->authorizeAdmin();
+        $user = Auth::user();
 
-        $classes = SchoolClass::all();
+        $classes = SchoolClass::where('school_id', $user->school_id)->get();
+
         return view('fees.create', compact('classes'));
     }
 
@@ -36,15 +42,18 @@ class FeeController extends Controller
      */
     public function store(Request $request)
     {
-        $this->authorizeAdmin();
+        $user = Auth::user();
 
         $validated = $request->validate([
             'class_id' => 'required|exists:classes,id',
-            'name' => 'required|string|max:255',
-            'amount' => 'required|numeric|min:0',
-            'term' => 'required|string|max:50',
-            'session' => 'required|string|max:50',
+            'name'     => 'required|string|max:255',
+            'amount'   => 'required|numeric|min:0',
+            'term'     => 'required|string|max:50',
+            'session'  => 'required|string|max:50',
         ]);
+
+        // Assign school_id automatically
+        $validated['school_id'] = $user->school_id;
 
         Fee::create($validated);
 
@@ -56,9 +65,15 @@ class FeeController extends Controller
      */
     public function edit(Fee $fee)
     {
-        $this->authorizeAdmin();
+        $user = Auth::user();
 
-        $classes = SchoolClass::all();
+        // Ensure fee belongs to admin's school
+        if ($fee->school_id !== $user->school_id) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        $classes = SchoolClass::where('school_id', $user->school_id)->get();
+
         return view('fees.edit', compact('fee', 'classes'));
     }
 
@@ -67,14 +82,18 @@ class FeeController extends Controller
      */
     public function update(Request $request, Fee $fee)
     {
-        $this->authorizeAdmin();
+        $user = Auth::user();
+
+        if ($fee->school_id !== $user->school_id) {
+            abort(403, 'Unauthorized access.');
+        }
 
         $validated = $request->validate([
             'class_id' => 'required|exists:classes,id',
-            'name' => 'required|string|max:255',
-            'amount' => 'required|numeric|min:0',
-            'term' => 'required|string|max:50',
-            'session' => 'required|string|max:50',
+            'name'     => 'required|string|max:255',
+            'amount'   => 'required|numeric|min:0',
+            'term'     => 'required|string|max:50',
+            'session'  => 'required|string|max:50',
         ]);
 
         $fee->update($validated);
@@ -87,20 +106,14 @@ class FeeController extends Controller
      */
     public function destroy(Fee $fee)
     {
-        $this->authorizeAdmin();
+        $user = Auth::user();
+
+        if ($fee->school_id !== $user->school_id) {
+            abort(403, 'Unauthorized access.');
+        }
 
         $fee->delete();
 
         return redirect()->route('fees.index')->with('success', 'Fee deleted successfully.');
-    }
-
-    /**
-     * Helper to allow only admins
-     */
-    private function authorizeAdmin()
-    {
-        if (Auth::user()->role !== 'admin') {
-            abort(403, 'Admins only');
-        }
     }
 }

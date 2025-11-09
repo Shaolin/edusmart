@@ -10,7 +10,7 @@ class Subject extends Model
     use HasFactory;
 
     
-    protected $fillable = ['name', 'level'];
+    protected $fillable = ['name', 'level', 'school_id',];
 
 
     // A subject can be taught by many teachers across classes
@@ -42,5 +42,9 @@ public function results()
 {
     return $this->hasMany(Result::class);
 }
+public function school()
+    {
+        return $this->belongsTo(School::class);
+    }
 
 }

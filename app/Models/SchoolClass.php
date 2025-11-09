@@ -12,7 +12,7 @@ class SchoolClass extends Model
     protected $table = 'classes';
 
     protected $fillable = [
-        'name', 'section', 'form_teacher_id', 'next_class_id'
+        'name', 'section', 'form_teacher_id', 'next_class_id', 'school_id',
     ];
 
     // Class has many students

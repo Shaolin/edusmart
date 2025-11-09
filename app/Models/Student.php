@@ -16,6 +16,7 @@ class Student extends Model
         'date_of_birth',
         'class_id',
         'guardian_id',
+        'school_id',
     ];
 
     // Student belongs to a class
@@ -42,6 +43,8 @@ public function results()
 {
     return $this->hasMany(Result::class);
 }
+
+
 
 
 

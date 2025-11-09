@@ -13,11 +13,17 @@ class Guardian extends Model
         'phone',
         'email',
         'relationship',
+        'school_id',
     ];
 
     // Guardian has many students
     public function students()
     {
         return $this->hasMany(Student::class, 'guardian_id');
+    }
+    
+    public function school()
+    {
+        return $this->belongsTo(School::class);
     }
 }

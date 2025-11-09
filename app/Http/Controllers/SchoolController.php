@@ -5,15 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\School;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class SchoolController extends Controller
 {
     /**
      * Display the school information page.
+     * Admin only: shows the school they created/own.
      */
     public function index()
     {
-        $school = School::first(); // Get the first school record for the tenant
+        $user = Auth::user();
+
+        // For now, admin sees the school they belong to
+        $school = School::where('id', $user->school_id)->first();
+
         return view('schools.index', compact('school'));
     }
 
@@ -22,6 +28,7 @@ class SchoolController extends Controller
      */
     public function create()
     {
+        $this->authorizeAdmin();
         return view('schools.create');
     }
 
@@ -30,6 +37,8 @@ class SchoolController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorizeAdmin();
+
         $request->validate([
             'name'    => 'required|string|max:255',
             'logo'    => 'nullable|image|max:2048',
@@ -45,7 +54,12 @@ class SchoolController extends Controller
             $data['logo'] = $request->file('logo')->store('school_logos', 'public');
         }
 
-        School::create($data);
+        $school = School::create($data);
+
+        // Assign this school to admin
+        $user = Auth::user();
+        $user->school_id = $school->id;
+        $user->save();
 
         return redirect()->route('schools.index')->with('success', 'School created successfully!');
     }
@@ -55,6 +69,8 @@ class SchoolController extends Controller
      */
     public function edit(School $school)
     {
+        $this->authorizeAdmin();
+
         return view('schools.edit', compact('school'));
     }
 
@@ -63,6 +79,8 @@ class SchoolController extends Controller
      */
     public function update(Request $request, School $school)
     {
+        $this->authorizeAdmin();
+
         $request->validate([
             'name'    => 'required|string|max:255',
             'logo'    => 'nullable|image|max:2048',
@@ -75,7 +93,6 @@ class SchoolController extends Controller
         $data = $request->only(['name', 'address', 'phone', 'email', 'website']);
 
         if ($request->hasFile('logo')) {
-            // Delete old logo
             if ($school->logo && Storage::disk('public')->exists($school->logo)) {
                 Storage::disk('public')->delete($school->logo);
             }
@@ -92,7 +109,8 @@ class SchoolController extends Controller
      */
     public function destroy(School $school)
     {
-        // Delete logo if exists
+        $this->authorizeAdmin();
+
         if ($school->logo && Storage::disk('public')->exists($school->logo)) {
             Storage::disk('public')->delete($school->logo);
         }
@@ -100,5 +118,15 @@ class SchoolController extends Controller
         $school->delete();
 
         return redirect()->route('schools.index')->with('success', 'School deleted successfully!');
+    }
+
+    /**
+     * Ensure only admins can create/update/delete schools
+     */
+    private function authorizeAdmin()
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Admins only');
+        }
     }
 }

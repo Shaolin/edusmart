@@ -14,17 +14,18 @@ class DashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
+        $schoolId = $user->school_id; // Use the user's school_id
 
         // ===============================
         // Teacher Dashboard
         // ===============================
         if ($user->role === 'teacher' && $user->teacher) {
             // Get the class where this teacher is the form teacher
-            $class = $user->teacher->formClasses()->first();
+            $class = $user->teacher->formClasses()->where('school_id', $schoolId)->first();
 
             if ($class) {
                 // Students in this class
-                $students = $class->students()->with('guardian')->paginate(20);
+                $students = $class->students()->where('school_id', $schoolId)->with('guardian')->paginate(20);
 
                 // Total students count
                 $totalStudents = $students->total();
@@ -53,11 +54,11 @@ class DashboardController extends Controller
         // Admin Dashboard
         // ===============================
         return view('dashboard.index', [
-            'totalStudents'  => Student::count(),
-            'totalTeachers'  => Teacher::count(),
-            'totalClasses'   => SchoolClass::count(),
-            'totalGuardians' => Guardian::count(),
-            'totalFees'      => Fee::sum('amount'), // 💰 Total defined fee amounts
+            'totalStudents'  => Student::where('school_id', $schoolId)->count(),
+            'totalTeachers'  => Teacher::where('school_id', $schoolId)->count(),
+            'totalClasses'   => SchoolClass::where('school_id', $schoolId)->count(),
+            'totalGuardians' => Guardian::where('school_id', $schoolId)->count(),
+            'totalFees'      => Fee::where('school_id', $schoolId)->sum('amount'), // 💰 Only this school's fees
         ]);
     }
 }

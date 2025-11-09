@@ -6,22 +6,39 @@ use App\Models\School;
 use App\Models\Student;
 use App\Models\FeePayment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReceiptController extends Controller
 {
     /**
-     * Display the receipt for a single payment.
+     * Only allow admins
+     */
+    private function authorizeAdmin()
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Admins only');
+        }
+    }
+
+    /**
+     * Display the receipt for a single payment
      */
     public function show($paymentId)
     {
+        $this->authorizeAdmin();
+
         $payment = FeePayment::with(['student.schoolClass', 'fee', 'school'])
             ->findOrFail($paymentId);
+
+        // Ensure the payment belongs to this school
+        if ($payment->student->school_id !== Auth::user()->school_id) {
+            abort(403, 'Unauthorized');
+        }
 
         $student = $payment->student;
         $school  = $payment->school;
 
-        // All payments by this student
         $paymentHistory = FeePayment::where('student_id', $student->id)
             ->orderBy('payment_date', 'asc')
             ->get();
@@ -36,12 +53,18 @@ class ReceiptController extends Controller
     }
 
     /**
-     * Generate and download PDF for a single payment.
+     * Generate and download PDF for a single payment
      */
     public function download($paymentId)
     {
+        $this->authorizeAdmin();
+
         $payment = FeePayment::with(['student.schoolClass', 'fee', 'school'])
             ->findOrFail($paymentId);
+
+        if ($payment->student->school_id !== Auth::user()->school_id) {
+            abort(403, 'Unauthorized');
+        }
 
         $student = $payment->student;
         $school  = $payment->school;
@@ -63,27 +86,35 @@ class ReceiptController extends Controller
     }
 
     /**
-     * Generate receipt for a student for a given term and session.
+     * Generate receipt for a student for a given term and session
      */
     public function view(Request $request)
-{
-    $studentId = $request->query('student');
-    $term      = $request->query('term');
-    $session   = $request->query('session');
+    {
+        $this->authorizeAdmin();
 
-    $student = Student::findOrFail($studentId);
-    $school  = School::first(); // adjust if multi-tenant
+        $studentId = $request->query('student');
+        $term      = $request->query('term');
+        $session   = $request->query('session');
 
-    $payments = FeePayment::where('student_id', $studentId)
-                  ->where('term', $term)
-                  ->where('session', $session)
-                  ->get();
+        $student = Student::findOrFail($studentId);
 
-    $totalPaid = $payments->sum('amount');
-    $totalFees = $payments->sum(fn($p) => $p->fee->amount ?? 0);
-    $balance   = $totalFees - $totalPaid;
+        if ($student->school_id !== Auth::user()->school_id) {
+            abort(403, 'Unauthorized');
+        }
 
-    return view('receipts.show', compact('student', 'school', 'payments', 'term', 'session', 'totalPaid', 'totalFees', 'balance'));
-}
+        $school = School::first(); // adjust for multi-tenant if needed
 
+        $payments = FeePayment::where('student_id', $studentId)
+            ->where('term', $term)
+            ->where('session', $session)
+            ->get();
+
+        $totalPaid = $payments->sum('amount');
+        $totalFees = $payments->sum(fn($p) => $p->fee->amount ?? 0);
+        $balance   = $totalFees - $totalPaid;
+
+        return view('receipts.show', compact(
+            'student', 'school', 'payments', 'term', 'session', 'totalPaid', 'totalFees', 'balance'
+        ));
+    }
 }

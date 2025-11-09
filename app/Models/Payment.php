@@ -18,6 +18,7 @@ class Payment extends Model
         'payment_date',
         'session',
         'term',
+        'school_id',
     ];
 
     // Relationships
@@ -29,5 +30,9 @@ class Payment extends Model
     public function fee()
     {
         return $this->belongsTo(Fee::class);
+    }
+    public function school()
+    {
+        return $this->belongsTo(School::class);
     }
 }

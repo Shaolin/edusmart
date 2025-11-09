@@ -20,6 +20,7 @@ class Result extends Model
         'grade',
         'remark',
         'teacher_remark', 
+        'school_id',
     ];
 
     public function student()
@@ -40,6 +41,10 @@ class Result extends Model
     public function session()
     {
         return $this->belongsTo(AcademicSession::class, 'session_id');
+    }
+    public function school()
+    {
+        return $this->belongsTo(School::class);
     }
     
 }

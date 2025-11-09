@@ -14,6 +14,7 @@ class Teacher extends Model
         'staff_id',
         'qualification',
         'specialization',
+        'school_id',
     ];
 
     // Each teacher belongs to one user
@@ -43,5 +44,6 @@ class Teacher extends Model
 {
     return $this->belongsTo(School::class);
 }
+
 
 }
