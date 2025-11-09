@@ -5,23 +5,23 @@
         </h2>
     </x-slot>
 
-    <div class="bg-white dark:bg-gray-900 rounded-lg shadow p-4 sm:p-6 text-gray-900 dark:text-gray-100">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6 sm:p-8 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
 
         {{-- ✅ Flash Messages --}}
         @if (session('success'))
-            <div class="mb-3 p-3 rounded-lg bg-green-100 text-green-800 border border-green-300 text-sm">
+            <div class="mb-4 p-4 rounded-lg bg-green-100 text-green-800 border border-green-300 text-sm font-medium">
                 {{ session('success') }}
             </div>
         @endif
 
         @if (session('error'))
-            <div class="mb-3 p-3 rounded-lg bg-red-100 text-red-800 border border-red-300 text-sm">
+            <div class="mb-4 p-4 rounded-lg bg-red-100 text-red-800 border border-red-300 text-sm font-medium">
                 {{ session('error') }}
             </div>
         @endif
 
         @if ($errors->any())
-            <div class="mb-3 p-3 rounded-lg bg-red-100 text-red-800 border border-red-300 text-sm">
+            <div class="mb-4 p-4 rounded-lg bg-red-100 text-red-800 border border-red-300 text-sm font-medium">
                 <ul class="list-disc list-inside space-y-1">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -34,12 +34,13 @@
             @csrf
             <input type="hidden" name="student_id" value="{{ $student->id }}">
 
-            {{-- 🔹 Session and Term --}}
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            {{-- 🔹 Session & Term --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                 <div>
-                    <label class="block font-semibold mb-1">Session</label>
+                    <label class="block font-semibold mb-2">Session</label>
                     <select name="session_id"
-                            class="w-full border-gray-300 rounded-lg dark:bg-gray-800 dark:text-gray-100">
+                            class="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-base
+                                   dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-blue-400 focus:border-blue-500">
                         @foreach($sessions as $session)
                             <option value="{{ $session->id }}" {{ old('session_id') == $session->id ? 'selected' : '' }}>
                                 {{ $session->name }}
@@ -49,9 +50,10 @@
                 </div>
 
                 <div>
-                    <label class="block font-semibold mb-1">Term</label>
+                    <label class="block font-semibold mb-2">Term</label>
                     <select name="term_id"
-                            class="w-full border-gray-300 rounded-lg dark:bg-gray-800 dark:text-gray-100">
+                            class="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-base
+                                   dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-blue-400 focus:border-blue-500">
                         @foreach($terms as $term)
                             <option value="{{ $term->id }}" {{ old('term_id') == $term->id ? 'selected' : '' }}>
                                 {{ $term->name }}
@@ -61,33 +63,35 @@
                 </div>
             </div>
 
-            {{-- 🔹 Subjects Table (Mobile Scrollable) --}}
+            {{-- 📘 Subjects Table --}}
             <div class="overflow-x-auto">
-                <table class="min-w-full bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm mb-4 text-sm">
+                <table class="min-w-full bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm text-sm border border-gray-200 dark:border-gray-700">
                     <thead>
-                        <tr class="bg-gray-200 dark:bg-gray-700">
-                            <th class="px-4 py-2 text-left whitespace-nowrap">Subject</th>
-                            <th class="px-4 py-2 text-left whitespace-nowrap">Test (40)</th>
-                            <th class="px-4 py-2 text-left whitespace-nowrap">Exam (60)</th>
+                        <tr class="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                            <th class="px-4 py-3 text-left">Subject</th>
+                            <th class="px-4 py-3 text-left">Test (40)</th>
+                            <th class="px-4 py-3 text-left">Exam (60)</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($subjects as $index => $subject)
-                            <tr class="border-b dark:border-gray-700">
-                                <td class="px-4 py-2 whitespace-nowrap">
+                            <tr class="border-t border-gray-200 dark:border-gray-700">
+                                <td class="px-4 py-3 font-medium">
                                     {{ $subject->name }}
                                     <input type="hidden" name="subject_id[]" value="{{ $subject->id }}">
                                 </td>
-                                <td class="px-4 py-2">
+                                <td class="px-4 py-3">
                                     <input type="number" name="test_score[]"
                                            max="40"
-                                           class="score-input w-24 sm:w-32 border-gray-300 rounded-lg dark:bg-gray-700 dark:text-gray-100"
+                                           class="w-28 sm:w-36 border border-gray-300 dark:border-gray-600 rounded-lg p-2 text-base
+                                                  dark:bg-gray-700 dark:text-gray-100 focus:ring-2 focus:ring-blue-400 focus:border-blue-500"
                                            value="{{ old('test_score.' . $index) }}">
                                 </td>
-                                <td class="px-4 py-2">
+                                <td class="px-4 py-3">
                                     <input type="number" name="exam_score[]"
                                            max="60"
-                                           class="score-input w-24 sm:w-32 border-gray-300 rounded-lg dark:bg-gray-700 dark:text-gray-100"
+                                           class="w-28 sm:w-36 border border-gray-300 dark:border-gray-600 rounded-lg p-2 text-base
+                                                  dark:bg-gray-700 dark:text-gray-100 focus:ring-2 focus:ring-blue-400 focus:border-blue-500"
                                            value="{{ old('exam_score.' . $index) }}">
                                 </td>
                             </tr>
@@ -96,27 +100,23 @@
                 </table>
             </div>
 
-            {{-- Teacher's General Remark --}}
-            <div class="mt-4">
-                <label for="teacher_remark" class="block font-semibold mb-1">
+            {{-- 📝 Teacher's Remarks --}}
+            <div class="mt-6">
+                <label for="teacher_remark" class="block font-semibold mb-2">
                     Teacher's Remark
                 </label>
-                <textarea name="teacher_remark" id="teacher_remark" rows="3"
-                          class="w-full border border-gray-300 dark:border-gray-700 rounded-lg p-2 focus:ring focus:ring-blue-300 dark:bg-gray-800 dark:text-gray-100"
+                <textarea name="teacher_remark" id="teacher_remark" rows="4"
+                          class="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-base
+                                 dark:bg-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-blue-400 focus:border-blue-500"
                           placeholder="Enter a general remark...">{{ old('teacher_remark') }}</textarea>
             </div>
 
-            {{-- 🔹 Submit Button --}}
+            {{-- ✅ Submit Button --}}
             <button type="submit"
-                    class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg w-full sm:w-auto">
+                    class="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg text-base font-semibold shadow-md
+                           w-full sm:w-auto transition-all">
                 Save Results
             </button>
         </form>
     </div>
-
-    {{-- ⚡ Confirmation + Highlight Script --}}
-    <script>
-        // Existing script stays the same — no changes needed for responsiveness
-    </script>
-
 </x-app-layout>
