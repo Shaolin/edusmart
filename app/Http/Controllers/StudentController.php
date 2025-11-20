@@ -2,14 +2,38 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Term;
+use App\Models\Result;
+use App\Models\School;
 use App\Models\Student;
 use App\Models\Guardian;
 use App\Models\SchoolClass;
 use Illuminate\Http\Request;
+use App\Mail\StudentResultMail;
+use App\Models\AcademicSession;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+   
+   use App\Mail\ResultMail;
+   use App\Services\ResultService;
+
+   
+   
+
+
+
 
 class StudentController extends Controller
 {
+
+    protected $resultService;
+
+public function __construct(ResultService $resultService)
+{
+    $this->resultService = $resultService;
+}
+
     /**
      * Display a listing of students.
      */
@@ -45,7 +69,7 @@ class StudentController extends Controller
         }
 
         // Paginate and preserve query string for links
-        $students = $query->paginate(20)->appends(request()->query());
+        $students = $query->paginate(10)->appends(request()->query());
 
         // Classes only for this admin's school
         $classes = SchoolClass::where('school_id', $user->school_id)->get();
@@ -211,4 +235,36 @@ class StudentController extends Controller
         return redirect()->route('students.index')
                          ->with('success', 'Students promoted successfully.');
     }
+
+   // send result
+   
+   
+  
+
+   
+   
+   
+   public function sendResult($studentId)
+   {
+       $student = Student::with(['school', 'schoolClass'])->findOrFail($studentId);
+       $results = $student->results; // ensure this relationship exists
+       $school = $student->school;
+   
+       // Send to the actual parent's email
+       Mail::raw('Testing Gmail SMTP from Laravel', function ($msg) {
+        $msg->to('agozieokolo2@gmail.com')->subject('Gmail Test');
+
+        
+    });
+    
+   
+       return back()->with('success', 'Result sent successfully!');
+   }
+   
+   
+   
+
+   
+
+
 }

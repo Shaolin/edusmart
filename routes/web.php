@@ -16,7 +16,14 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\GuardianController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FeePaymentController;
+
+
+use App\Http\Controllers\ClassSubjectController;
+
 use App\Http\Controllers\TeacherDashboardController;
+use App\Http\Controllers\Teacher\TeacherClassController;
+use App\Http\Controllers\Teacher\TeacherResultController;
+use App\Http\Controllers\Teacher\TeacherStudentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -78,6 +85,16 @@ Route::middleware(['auth'])->group(function () {
     Route::post('students/promote', [StudentController::class, 'promote'])
         ->middleware('admin')
         ->name('students.promote');
+
+    //     Route::post('/send-result/{student}', [StudentController::class, 'sendResult'])
+    //  ->name('send.result');
+
+     Route::post('/send-result/{student}', [StudentController::class, 'sendResult'])
+    ->middleware('auth') // or 'admin' if needed
+    ->name('send.result');
+
+
+    
 });
 
 // ===============================
@@ -238,11 +255,97 @@ Route::get('/test-whatsapp', function (WhatsAppService $whatsapp) {
 
 
 
-Route::middleware(['auth', 'teacher'])->group(function () {
-    Route::get('/dashboard/teachers', [TeacherDashboardController::class, 'index'])->name('teachers.dashboard');
-    Route::get('/dashboard/students', [TeacherDashboardController::class, 'students'])->name('teachers.students');
-    Route::get('/dashboard/results', [TeacherDashboardController::class, 'results'])->name('teachers.results');
+// Route::middleware(['auth', 'teacher'])->group(function () {
+//     Route::get('/dashboard/teachers', [TeacherDashboardController::class, 'index'])->name('teachers.dashboard');
+//     Route::get('/dashboard/students', [TeacherDashboardController::class, 'students'])->name('teachers.students');
+//     Route::get('/dashboard/results', [TeacherDashboardController::class, 'results'])->name('teachers.results');
+// });
+
+
+Route::middleware(['auth', 'teacher'])
+    ->prefix('teacher')
+    ->name('teachers.')
+    ->group(function () {
+       
+        Route::get('/students', [TeacherStudentController::class, 'index'])->name('students');
+        Route::get('/results', [TeacherResultController::class, 'index'])->name('results');
+        Route::get('/classes', [TeacherClassController::class, 'index'])->name('classes');
+    });
+
+    // Teacher routes
+Route::prefix('teacher')->name('teachers.')->middleware(['auth', 'teacher'])->group(function () {
+    Route::get('/students', [TeacherStudentController::class, 'index'])->name('students');
 });
+
+    
+
+// ===============================
+// Teacher Result Controller
+// ===============================
+
+
+
+
+
+Route::prefix('teacher')->middleware(['auth'])->group(function () {
+    // Show all students assigned to teacher’s class
+    Route::get('results', [TeacherResultController::class, 'index'])->name('teachers.results.index');
+
+    // Enter/edit results for one student
+    Route::get('students/{student}/results', [TeacherResultController::class, 'edit'])->name('teachers.results.edit');
+    // Enter/ results for one student
+    Route::get('students/{student}/results', [TeacherResultController::class, 'edit'])->name('teachers.results.edit');
+
+    // Save result entries
+    Route::post('students/{student}/results', [TeacherResultController::class, 'update'])->name('teachers.results.update');
+       
+     // View Result 
+    Route::get('/teacher/results/{student}/view', [TeacherResultController::class, 'show'])
+     ->name('teachers.results.show');
+         // Student  Result 
+     Route::get('/teacher/results/{student}/report', [TeacherResultController::class, 'report'])
+    ->name('teachers.results.report');
+        // Student  Result  download
+    Route::get('/teacher/results/{student}/download', [TeacherResultController::class, 'download'])
+    ->name('teachers.results.download');
+
+});
+
+
+// ===============================
+// Class Subject Controller
+// ===============================
+
+use App\Http\Controllers\Admin\ClassSubjectTeacherController;
+
+// Show all assignments
+Route::get('/admin/class-subject-teacher', [ClassSubjectController::class, 'index'])
+    ->name('class_subject_teacher.index');
+
+// Show form to assign a subject to a class
+Route::get('/admin/class-subject-teacher/create', [ClassSubjectController::class, 'create'])
+    ->name('class_subject_teacher.create');
+
+// Store the assignment
+Route::post('/admin/class-subject-teacher', [ClassSubjectController::class, 'store'])
+    ->name('class_subject_teacher.store');
+
+// Optional: edit an existing assignment
+Route::get('/admin/class-subject-teacher/{assignment}/edit', [ClassSubjectController::class, 'edit'])
+    ->name('class_subject_teacher.edit');
+
+// Optional: update an existing assignment
+Route::put('/admin/class-subject-teacher/{assignment}', [ClassSubjectController::class, 'update'])
+    ->name('class_subject_teacher.update');
+
+// Optional: delete an assignment
+Route::delete('/admin/class-subject-teacher/{assignment}', [ClassSubjectController::class, 'destroy'])
+    ->name('class_subject_teacher.destroy');
+
+  
+
+
+
 
 
 

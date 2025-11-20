@@ -34,18 +34,20 @@
             $schoolId = auth()->user()->school_id;
         
             $cards = [
-                ['name' => 'Students', 'route' => 'students.index', 'count' => $totalStudents ?? 0, 'color' => 'blue'],
-                ['name' => 'Teachers', 'route' => 'teachers.index', 'count' => $totalTeachers ?? 0, 'color' => 'green'],
-                ['name' => 'Classes', 'route' => 'classes.index', 'count' => $totalClasses ?? 0, 'color' => 'purple'],
-                ['name' => 'Guardians', 'route' => 'guardians.index', 'count' => $totalGuardians ?? 0, 'color' => 'yellow'],
-                ['name' => 'Fees', 'route' => 'fees.index', 'count' => 'View', 'color' => 'indigo'],
-                ['name' => 'Payments', 'route' => 'fee_payments.index', 'count' => 'View', 'color' => 'blue'],
-                ['name' => 'School', 'route' => 'schools.index', 'count' => 'Manage', 'color' => 'pink'],
-                ['name' => 'Results', 'route' => 'results.selectClass', 'count' => 'Manage', 'color' => 'red'],
-                ['name' => 'Subjects', 'route' => 'subjects.index', 'count' => 'Manage', 'color' => 'indigo'],
-                ['name' => 'Sessions', 'route' => 'sessions.index', 'count' => 'Manage', 'color' => 'indigo'],
-                ['name' => 'Terms', 'route' => 'terms.index', 'count' => 'Manage', 'color' => 'orange'],
-            ];
+    ['name' => 'Students', 'route' => 'students.index', 'count' => $totalStudents ?? 0, 'color' => 'blue'],
+    ['name' => 'Teachers', 'route' => 'teachers.index', 'count' => $totalTeachers ?? 0, 'color' => 'green'],
+    ['name' => 'Classes', 'route' => 'classes.index', 'count' => $totalClasses ?? 0, 'color' => 'purple'],
+    ['name' => 'Guardians', 'route' => 'guardians.index', 'count' => $totalGuardians ?? 0, 'color' => 'yellow'],
+    ['name' => 'Fees', 'route' => 'fees.index', 'count' => 'View', 'color' => 'indigo'],
+    ['name' => 'Payments', 'route' => 'fee_payments.index', 'count' => 'View', 'color' => 'blue'],
+    ['name' => 'School', 'route' => 'schools.index', 'count' => 'Manage', 'color' => 'pink'],
+    ['name' => 'Results', 'route' => 'results.selectClass', 'count' => 'Manage', 'color' => 'red'],
+    ['name' => 'Subjects', 'route' => 'subjects.index', 'count' => 'Manage', 'color' => 'indigo'],
+    ['name' => 'Assigned Subjects', 'route' => 'class_subject_teacher.index', 'count' => 'Manage', 'color' => 'teal'], // ✅ new card
+    ['name' => 'Sessions', 'route' => 'sessions.index', 'count' => 'Manage', 'color' => 'indigo'],
+    ['name' => 'Terms', 'route' => 'terms.index', 'count' => 'Manage', 'color' => 'orange'],
+];
+
         @endphp
         
 

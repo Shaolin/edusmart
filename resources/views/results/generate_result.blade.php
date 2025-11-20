@@ -1,27 +1,34 @@
+
+
+<form action="{{ route('send.result', $student->id) }}" method="POST">
+    @csrf
+    <button type="submit" class="px-4 py-2 bg-yellow-400 rounded">Send Result to Parent</button>
+</form>
+
+
 <x-app-layout>
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
                 <h2 class="font-bold text-xl sm:text-2xl text-gray-800 dark:text-gray-100">
-                    Result — {{ $student->name ?? ($student->first_name . ' ' . $student->last_name) }}
+                    Result — {{ $student->name ?? ($student->first_name . ' ' . $student->last_name ?? '—') }}
                 </h2>
                 <p class="text-blue-600 dark:text-blue-400 font-semibold text-sm">
-                    {{ $term->name }} | {{ $session->name }}
+                    {{ $term->name ?? '—' }} | {{ $session->name ?? '—' }}
                 </p>
             </div>
-
-           
         </div>
     </x-slot>
 
     <div class="py-6 sm:py-8 max-w-5xl mx-auto px-3 sm:px-6 lg:px-8">
         <div id="result-sheet" class="bg-white dark:bg-gray-900 shadow-lg rounded-lg p-4 sm:p-6 relative font-sans">
-
+            
             {{-- Watermark --}}
             @if($school && $school->logo)
                 <img src="{{ asset('storage/' . $school->logo) }}"
                      class="absolute top-1/2 left-1/2 w-48 sm:w-72 opacity-5 -translate-x-1/2 -translate-y-1/2 rotate-12 z-0">
             @endif
+            
 
             {{-- Header --}}
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 relative z-10 mb-6">
@@ -31,15 +38,17 @@
                     @endif
 
                     <div class="text-sm sm:text-base text-gray-800 dark:text-gray-100">
-                        <h1 class="font-bold text-blue-800 dark:text-blue-400 text-lg sm:text-xl">{{ $school->name ?? 'School Name' }}</h1>
-                        <p class="text-gray-600 dark:text-gray-300">{{ $school->address ?? '' }}</p>
+                        <h1 class="font-bold text-blue-800 dark:text-blue-400 text-lg sm:text-xl">
+                            {{ $school->name ?? 'School Name' }}
+                        </h1>
+                        <p class="text-gray-600 dark:text-gray-300">{{ $school->address ?? '—' }}</p>
                         <p class="text-gray-600 dark:text-gray-300">
-                            Contact: <span class="text-blue-600 dark:text-blue-400">{{ $school->phone ?? $school->contact ?? 'Not set' }}</span>
+                            Contact: <span class="text-blue-600 dark:text-blue-400">{{ $school->phone ?? $school->contact ?? '—' }}</span>
                         </p>
-                        @if($school->email)
+                        @if(!empty($school->email))
                             <p class="truncate text-gray-600 dark:text-gray-300">Email: <span class="text-purple-600 dark:text-purple-400">{{ $school->email }}</span></p>
                         @endif
-                        @if($school->website)
+                        @if(!empty($school->website))
                             <p class="truncate text-gray-600 dark:text-gray-300">Website: <span class="text-purple-600 dark:text-purple-400">{{ $school->website }}</span></p>
                         @endif
                     </div>
@@ -56,11 +65,11 @@
             <div class="relative z-10 border-b border-gray-300 dark:border-gray-700 pb-4 mb-6 text-gray-800 dark:text-gray-100">
                 <h2 class="font-semibold mb-2 text-sm sm:text-base">Student Information</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm">
-                    <p><strong>Name:</strong> <span class="text-blue-600 dark:text-blue-400">{{ $student->name }}</span></p>
+                    <p><strong>Name:</strong> <span class="text-blue-600 dark:text-blue-400">{{ $student->name ?? '—' }}</span></p>
                     <p><strong>Admission No:</strong> <span class="text-purple-600 dark:text-purple-400">{{ $student->admission_number ?? '—' }}</span></p>
                     <p><strong>Class:</strong> <span class="text-green-600 dark:text-green-400">{{ $student->schoolClass->name ?? '—' }}</span></p>
-                    <p><strong>Term:</strong> <span class="text-purple-600 dark:text-purple-400">{{ $term->name }}</span></p>
-                    <p><strong>Session:</strong> <span class="text-purple-600 dark:text-purple-400">{{ $session->name }}</span></p>
+                    <p><strong>Term:</strong> <span class="text-purple-600 dark:text-purple-400">{{ $term->name ?? '—' }}</span></p>
+                    <p><strong>Session:</strong> <span class="text-purple-600 dark:text-purple-400">{{ $session->name ?? '—' }}</span></p>
                     <p><strong>Date:</strong> <span class="text-gray-600 dark:text-gray-300">{{ now()->format('d M, Y') }}</span></p>
                 </div>
             </div>
@@ -81,14 +90,14 @@
                     <tbody class="text-gray-800 dark:text-gray-100">
                         @php $totalSum = 0; $count = 0; @endphp
                         @foreach($results as $result)
-                            @php $totalSum += $result->total_score; $count++; @endphp
+                            @php $totalSum += $result->total_score ?? 0; $count++; @endphp
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <td class="border px-2 py-1 sm:px-4 sm:py-2 text-indigo-600 dark:text-indigo-400">{{ $result->subject->name }}</td>
-                                <td class="border px-2 py-1 sm:px-4 sm:py-2 text-center">{{ $result->test_score }}</td>
-                                <td class="border px-2 py-1 sm:px-4 sm:py-2 text-center">{{ $result->exam_score }}</td>
-                                <td class="border px-2 py-1 sm:px-4 sm:py-2 text-center font-semibold">{{ $result->total_score }}</td>
-                                <td class="border px-2 py-1 sm:px-4 sm:py-2 text-center font-semibold">{{ $result->grade }}</td>
-                                <td class="border px-2 py-1 sm:px-4 sm:py-2 text-center">{{ $result->remark }}</td>
+                                <td class="border px-2 py-1 sm:px-4 sm:py-2 text-indigo-600 dark:text-indigo-400">{{ $result->subject->name ?? '—' }}</td>
+                                <td class="border px-2 py-1 sm:px-4 sm:py-2 text-center">{{ $result->test_score ?? 0 }}</td>
+                                <td class="border px-2 py-1 sm:px-4 sm:py-2 text-center">{{ $result->exam_score ?? 0 }}</td>
+                                <td class="border px-2 py-1 sm:px-4 sm:py-2 text-center font-semibold">{{ $result->total_score ?? 0 }}</td>
+                                <td class="border px-2 py-1 sm:px-4 sm:py-2 text-center font-semibold">{{ $result->grade ?? '—' }}</td>
+                                <td class="border px-2 py-1 sm:px-4 sm:py-2 text-center">{{ $result->remark ?? '—' }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -99,13 +108,13 @@
             @if($count > 0)
             <div class="mt-5 text-xs sm:text-sm space-y-1 text-gray-800 dark:text-gray-100">
                 <p><strong>Total Score:</strong> {{ $totalSum }}</p>
-                <p><strong>Average:</strong> {{ number_format($totalSum / $count, 2) }}</p>
+                <p><strong>Average:</strong> {{ $count > 0 ? number_format($totalSum / $count, 2) : 0 }}</p>
                 <p><strong>Position:</strong> {{ $position ?? '—' }} out of {{ $total_students ?? '—' }} students</p>
             </div>
             @endif
 
             {{-- Teacher Remark --}}
-            @if($results->first() && $results->first()->teacher_remark)
+            @if($results->first()?->teacher_remark)
                 <div class="mt-5 text-xs sm:text-sm text-gray-800 dark:text-gray-100">
                     <h2 class="font-semibold mb-1">Teacher's Remark:</h2>
                     <p class="italic">{{ $results->first()->teacher_remark }}</p>
@@ -115,7 +124,7 @@
             {{-- Edit Button --}}
             @if($results->count() > 0)
             <div class="mt-4 text-center no-print">
-                <a href="{{ route('results.editAll', ['student_id'=>$student->id,'term_id'=>$term->id,'session_id'=>$session->id]) }}"
+                <a href="{{ route('results.editAll', ['student_id'=>$student->id,'term_id'=>$term->id ?? 0,'session_id'=>$session->id ?? 0]) }}"
                     class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm sm:text-base">
                     ✏️ Edit Results
                 </a>
@@ -131,24 +140,4 @@
             </div>
         </div>
     </div>
-
-    <style>
-        @media print {
-            body * { visibility: hidden !important; }
-            #result-sheet, #result-sheet * { visibility: visible !important; }
-            #result-sheet { position: absolute; left: 0; top: 0; width: 100%; }
-            .no-print { display: none !important; }
-        }
-    </style>
-
-    <script>
-        const toggleBtn = document.getElementById('toggle-dark');
-        const htmlEl = document.documentElement;
-        if (localStorage.getItem('dark-mode') === 'true') htmlEl.classList.add('dark');
-
-        toggleBtn.addEventListener('click', () => {
-            htmlEl.classList.toggle('dark');
-            localStorage.setItem('dark-mode', htmlEl.classList.contains('dark'));
-        });
-    </script>
 </x-app-layout>

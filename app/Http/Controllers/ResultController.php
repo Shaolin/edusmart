@@ -287,20 +287,51 @@ class ResultController extends Controller
         ));
     }
 
-    public function generate($student_id, $term_id, $session_id)
-    {
-        $student = Student::findOrFail($student_id);
-        $term = Term::findOrFail($term_id);
-        $session = AcademicSession::findOrFail($session_id);
-        $results = Result::where('student_id', $student_id)
-            ->where('term_id', $term_id)
-            ->where('session_id', $session_id)
-            ->with('subject')
-            ->get();
-        $school = School::find(Auth::user()->school_id);
+    public function generateResult($student_id, $term_id = null, $session_id = null)
+{
+    $student = Student::with('schoolClass')->findOrFail($student_id);
+    $school  = School::find(Auth::user()->school_id);
 
-        return view('results.generate_result', compact('student', 'term', 'session', 'results', 'school'));
+    // Default to latest term/session if not provided
+    $term    = $term_id ? Term::find($term_id) : Term::latest()->first();
+    $session = $session_id ? AcademicSession::find($session_id) : AcademicSession::latest()->first();
+
+    // Safety: if term/session not found
+    if (!$term) $term = new Term(['name' => '—']);
+    if (!$session) $session = new AcademicSession(['name' => '—']);
+
+    $results = Result::where('student_id', $student_id)
+        ->where('term_id', $term->id)
+        ->where('session_id', $session->id)
+        ->with('subject')
+        ->get();
+
+    // Precompute average
+    $average = $results->count() ? $results->avg('total_score') : 0;
+
+    // Precompute class ranking
+    $class_id = $student->schoolClass->id ?? null;
+    $position = $total_students = null;
+
+    if ($class_id) {
+        $class_averages = Result::selectRaw('student_id, AVG(total_score) as avg_score')
+            ->where('term_id', $term->id)
+            ->where('session_id', $session->id)
+            ->whereHas('student', fn($q) => $q->where('class_id', $class_id))
+            ->groupBy('student_id')
+            ->orderByDesc('avg_score')
+            ->get();
+
+        $ranked = $class_averages->pluck('student_id')->toArray();
+        $position = $ranked ? array_search($student_id, $ranked) + 1 : null;
+        $total_students = count($ranked);
     }
+
+    return view('results.generate_result', compact(
+        'student', 'term', 'session', 'results', 'average', 'position', 'total_students', 'school'
+    ));
+}
+
 
     public function classRanking($class_id)
     {

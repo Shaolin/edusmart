@@ -29,6 +29,8 @@ class Teacher extends Model
         return $this->hasMany(SchoolClass::class, 'form_teacher_id');
     }
 
+
+
     // A teacher can teach many subjects across different classes
     public function subjects()
     {
@@ -44,6 +46,7 @@ class Teacher extends Model
 {
     return $this->belongsTo(School::class);
 }
+
 
 
 }

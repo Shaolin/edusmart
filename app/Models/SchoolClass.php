@@ -57,4 +57,12 @@ class SchoolClass extends Model
     {
         return $this->belongsTo(School::class);
     }
+
+    public function results()
+{
+    return $this->hasManyThrough(Result::class, Student::class, 'class_id', 'student_id', 'id', 'id');
+}
+
+
+
 }

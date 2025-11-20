@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class SubjectController extends Controller
 {
@@ -52,23 +53,49 @@ class SubjectController extends Controller
     /**
      * Store a new subject
      */
+   
+
     public function store(Request $request)
     {
         $this->authorizeAdmin();
-
+    
+        // $validated = $request->validate([
+        //     'name' => [
+        //         'required',
+        //         'string',
+        //         'max:255',
+        //         Rule::unique('subjects')->where(function ($query) use ($request) {
+        //             return $query
+        //                 ->where('school_id', Auth::user()->school_id)
+        //                 ->where('level', $request->level);
+        //         }),
+        //     ],
+    
+        //     'level' => 'required|in:Nursery,Primary,JSS,SSS',
+        // ]);
         $validated = $request->validate([
-            'name'  => 'required|string|max:255|unique:subjects,name,NULL,id,school_id,' . Auth::user()->school_id,
+            'name'  => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('subjects')->where(function ($query) use ($request) {
+                    return $query->where('level', $request->level)
+                                 ->where('school_id', Auth::user()->school_id);
+                }),
+            ],
             'level' => 'required|in:Nursery,Primary,JSS,SSS',
         ]);
-
+        
+    
         $validated['school_id'] = Auth::user()->school_id;
-
+    
         Subject::create($validated);
-
+    
         return redirect()
             ->route('subjects.index')
             ->with('success', 'Subject created successfully.');
     }
+    
 
     /**
      * Show form to edit a subject
