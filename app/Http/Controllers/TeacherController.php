@@ -7,12 +7,13 @@ use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class TeacherController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('admin');
+        $this->middleware('admin'); // Only admins can access
     }
 
     /**
@@ -44,28 +45,34 @@ class TeacherController extends Controller
         $user = Auth::user();
 
         $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6|confirmed',
-            'staff_id' => 'nullable|string|unique:teachers,staff_id',
-            'qualification' => 'nullable|string|max:255',
-            'specialization' => 'nullable|string|max:255',
+            'name'         => 'required|string|max:255',
+            'email'        => 'required|email|unique:users,email',
+            'password'     => 'required|string|min:6|confirmed',
+            'staff_id'     => [
+                'nullable',
+                'string',
+                Rule::unique('teachers')->where(fn($query) => $query->where('school_id', $user->school_id)),
+            ],
+            'qualification'=> 'nullable|string|max:255',
+            'specialization'=> 'nullable|string|max:255',
         ]);
 
+        // Create user
         $userTeacher = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => 'teacher',
-            'school_id' => $user->school_id, // assign school_id to user
+            'school_id' => $user->school_id,
         ]);
 
+        // Create teacher record
         Teacher::create([
             'user_id' => $userTeacher->id,
+            'school_id' => $user->school_id,
             'staff_id' => $validated['staff_id'] ?? null,
             'qualification' => $validated['qualification'] ?? null,
             'specialization' => $validated['specialization'] ?? null,
-            'school_id' => $user->school_id, // assign school_id to teacher
         ]);
 
         return redirect()->route('teachers.index')
@@ -96,14 +103,19 @@ class TeacherController extends Controller
     public function update(Request $request, Teacher $teacher)
     {
         $validated = $request->validate([
-            'name'  => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $teacher->user_id,
-            'password' => 'nullable|string|min:6|confirmed',
-            'staff_id' => 'nullable|string|unique:teachers,staff_id,' . $teacher->id,
-            'qualification' => 'nullable|string|max:255',
-            'specialization' => 'nullable|string|max:255',
+            'name'         => 'required|string|max:255',
+            'email'        => ['required', 'email', Rule::unique('users', 'email')->ignore($teacher->user_id)],
+            'password'     => 'nullable|string|min:6|confirmed',
+            'staff_id'     => [
+                'nullable',
+                'string',
+                Rule::unique('teachers')->ignore($teacher->id)->where(fn($query) => $query->where('school_id', $teacher->school_id)),
+            ],
+            'qualification'=> 'nullable|string|max:255',
+            'specialization'=> 'nullable|string|max:255',
         ]);
 
+        // Update linked user
         $teacher->user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -112,6 +124,7 @@ class TeacherController extends Controller
                 : $teacher->user->password,
         ]);
 
+        // Update teacher
         $teacher->update([
             'staff_id' => $validated['staff_id'] ?? $teacher->staff_id,
             'qualification' => $validated['qualification'] ?? $teacher->qualification,

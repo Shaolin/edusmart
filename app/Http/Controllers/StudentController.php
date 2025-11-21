@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Mail;
    
    use App\Mail\ResultMail;
    use App\Services\ResultService;
+   use Illuminate\Validation\Rule;
 
    
    
@@ -99,7 +100,14 @@ public function __construct(ResultService $resultService)
         $validated = $request->validate([
             'name'             => 'required|string|max:255',
             'gender'           => 'required|in:male,female',
-            'admission_number' => 'required|unique:students,admission_number',
+            // 'admission_number' => 'required|unique:students,admission_number',
+            'admission_number' => [
+    'required',
+    Rule::unique('students', 'admission_number')
+        ->where(fn ($query) => $query->where('school_id', $user->school_id)),
+],
+
+
             'class_id'         => 'required|exists:classes,id',
             'guardian_id'      => 'nullable|exists:guardians,id',
             'guardian_name'    => 'nullable|string|max:255',
@@ -170,7 +178,17 @@ public function __construct(ResultService $resultService)
         $validated = $request->validate([
             'name'             => 'required|string|max:255',
             'gender'           => 'required|in:male,female',
-            'admission_number' => 'required|unique:students,admission_number,' . $student->id,
+            // 'admission_number' => 'required|unique:students,admission_number,' . $student->id,
+
+            'admission_number' => [
+            'required',
+            Rule::unique('students', 'admission_number')
+                ->ignore($student->id)
+                ->where(fn ($query) =>
+                    $query->where('school_id', $user->school_id)
+                ),
+        ],
+
             'class_id'         => 'required|exists:classes,id',
             'guardian_id'      => 'nullable|exists:guardians,id',
             'guardian_name'    => 'nullable|string|max:255',

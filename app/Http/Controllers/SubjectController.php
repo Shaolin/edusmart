@@ -20,12 +20,12 @@ class SubjectController extends Controller
     }
 
     /**
-     * List subjects with optional search
+     * List subjects for the logged-in school with optional search
      */
     public function index(Request $request)
     {
-        $search = $request->input('search');
         $user = Auth::user();
+        $search = $request->input('search');
 
         $subjects = Subject::where('school_id', $user->school_id)
             ->when($search, function ($query, $search) {
@@ -53,49 +53,32 @@ class SubjectController extends Controller
     /**
      * Store a new subject
      */
-   
-
     public function store(Request $request)
     {
         $this->authorizeAdmin();
-    
-        // $validated = $request->validate([
-        //     'name' => [
-        //         'required',
-        //         'string',
-        //         'max:255',
-        //         Rule::unique('subjects')->where(function ($query) use ($request) {
-        //             return $query
-        //                 ->where('school_id', Auth::user()->school_id)
-        //                 ->where('level', $request->level);
-        //         }),
-        //     ],
-    
-        //     'level' => 'required|in:Nursery,Primary,JSS,SSS',
-        // ]);
+        $user = Auth::user();
+
         $validated = $request->validate([
-            'name'  => [
+            'name' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('subjects')->where(function ($query) use ($request) {
+                Rule::unique('subjects')->where(function ($query) use ($request, $user) {
                     return $query->where('level', $request->level)
-                                 ->where('school_id', Auth::user()->school_id);
+                                 ->where('school_id', $user->school_id);
                 }),
             ],
             'level' => 'required|in:Nursery,Primary,JSS,SSS',
         ]);
-        
-    
-        $validated['school_id'] = Auth::user()->school_id;
-    
+
+        $validated['school_id'] = $user->school_id;
+
         Subject::create($validated);
-    
+
         return redirect()
             ->route('subjects.index')
             ->with('success', 'Subject created successfully.');
     }
-    
 
     /**
      * Show form to edit a subject
@@ -103,7 +86,6 @@ class SubjectController extends Controller
     public function edit(Subject $subject)
     {
         $this->authorizeAdmin();
-
         if ($subject->school_id !== Auth::user()->school_id) {
             abort(403, 'Unauthorized');
         }
@@ -118,15 +100,24 @@ class SubjectController extends Controller
     public function update(Request $request, Subject $subject)
     {
         $this->authorizeAdmin();
-
         if ($subject->school_id !== Auth::user()->school_id) {
             abort(403, 'Unauthorized');
         }
 
         $validated = $request->validate([
-            'name'  => 'required|string|max:255|unique:subjects,name,' . $subject->id . ',id,school_id,' . Auth::user()->school_id,
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('subjects')->ignore($subject->id)->where(function ($query) use ($request) {
+                    return $query->where('level', $request->level)
+                                 ->where('school_id', auth()->user()->school_id);
+                }),
+            ],
             'level' => 'required|in:Nursery,Primary,JSS,SSS',
         ]);
+
+        $validated['school_id'] = auth()->user()->school_id;
 
         $subject->update($validated);
 
@@ -141,7 +132,6 @@ class SubjectController extends Controller
     public function destroy(Subject $subject)
     {
         $this->authorizeAdmin();
-
         if ($subject->school_id !== Auth::user()->school_id) {
             abort(403, 'Unauthorized');
         }

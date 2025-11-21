@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\Teacher;
+use App\Models\SchoolClass;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 
 class ClassController extends Controller
@@ -97,19 +98,25 @@ class ClassController extends Controller
         $this->authorizeAdmin();
 
         $user = Auth::user();
+
         $validated = $request->validate([
-            'name'            => 'required|string|max:255|unique:classes,name',
-            'section'         => 'nullable|string|max:255',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('classes')->where(fn($query) => $query->where('school_id', $user->school_id)),
+            ],
+            'section' => 'nullable|string|max:255',
             'form_teacher_id' => 'nullable|exists:teachers,id',
-            'next_class_id'   => 'nullable|exists:school_classes,id',
+            'next_class_id' => 'nullable|exists:school_classes,id',
         ]);
 
-        // Assign school_id automatically
         $validated['school_id'] = $user->school_id;
 
         SchoolClass::create($validated);
 
-        return redirect()->route('classes.index')->with('success', 'Class created successfully.');
+        return redirect()->route('classes.index')
+                         ->with('success', 'Class created successfully.');
     }
 
     /**

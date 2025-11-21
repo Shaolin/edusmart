@@ -36,14 +36,11 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
     
-        // Check if any users exist
-        $isFirstUser = User::count() === 0;
-    
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $isFirstUser ? 'admin' : 'teacher',
+            'role' => 'admin', // always admin for self-registration
         ]);
     
         event(new Registered($user));
@@ -52,5 +49,6 @@ class RegisteredUserController extends Controller
     
         return redirect(RouteServiceProvider::HOME);
     }
+    
     
 }
