@@ -281,6 +281,31 @@ public function __construct(ResultService $resultService)
    }
    
    
+
+//    pdf result generator
+public function generatePdf($studentId)
+{
+    $student = Student::with(['school', 'schoolClass', 'guardian', 'results.subject'])->findOrFail($studentId);
+    $term = Term::find(request('term_id'));
+    $session = AcademicSession::find(request('session_id'));
+    $school = $student->school;
+    $results = $student->results;
+    $position = request('position');
+    $total_students = request('total_students');
+
+    $pdf = Pdf::loadView('results.pdf', compact('student', 'results', 'school', 'term', 'session', 'position', 'total_students'));
+
+    $fileName = 'results/' . $student->id . '.pdf';
+
+    // 🔥 Ensure the folder exists
+    Storage::disk('public')->makeDirectory('results');
+
+    // 🔥 Save correctly into public disk
+    Storage::disk('public')->put($fileName, $pdf->output());
+
+    return $fileName;
+}
+
    
 
    

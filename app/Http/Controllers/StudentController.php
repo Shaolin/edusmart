@@ -14,6 +14,7 @@ use App\Models\AcademicSession;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
    
    use App\Mail\ResultMail;
    use App\Services\ResultService;
@@ -283,26 +284,32 @@ public function __construct(ResultService $resultService)
 
 
 
-public function generatePdf($studentId)
-{
-    $student = Student::with(['school', 'schoolClass', 'guardian', 'results.subject'])->findOrFail($studentId);
-    $term = Term::find(request('term_id')); // or use current term
-    $session = AcademicSession::find(request('session_id'));
-    $school = $student->school;
-    $results = $student->results;
-    $position = $request->position ?? null; 
-    $total_students = $request->total_students ?? null;
-
-    $pdf = Pdf::loadView('results.pdf', compact('student', 'results', 'school', 'term', 'session', 'position', 'total_students'));
-
-    $fileName = 'results/' . $student->id . '.pdf';
-    $pdf->save(storage_path('app/public/' . $fileName));
-
-    return $fileName; // return path to use in WhatsApp link
-}
+   public function generatePdf($studentId)
+   {
+       $student = Student::with(['school', 'schoolClass', 'guardian', 'results.subject'])->findOrFail($studentId);
+       $term = Term::find(request('term_id'));
+       $session = AcademicSession::find(request('session_id'));
+       $school = $student->school;
+       $results = $student->results;
+       $position = request('position');
+       $total_students = request('total_students');
+   
+       $pdf = Pdf::loadView('results.pdf', compact('student', 'results', 'school', 'term', 'session', 'position', 'total_students'));
+   
+       $fileName = 'results/' . $student->id . '.pdf';
+   
+       //  Ensure the folder exists
+       Storage::disk('public')->makeDirectory('results');
+   
+       //  Save correctly into public disk
+       Storage::disk('public')->put($fileName, $pdf->output());
+   
+       return $fileName;
+   }
+   
 
    
-   
+
    
 
    
