@@ -89,9 +89,12 @@ Route::middleware(['auth'])->group(function () {
     //     Route::post('/send-result/{student}', [StudentController::class, 'sendResult'])
     //  ->name('send.result');
 
-     Route::post('/send-result/{student}', [StudentController::class, 'sendResult'])
-    ->middleware('auth') // or 'admin' if needed
-    ->name('send.result');
+    //  Route::post('/send-result/{student}', [StudentController::class, 'sendResult'])
+    // ->middleware('auth') 
+    // ->name('send.result');
+
+    Route::get('/students/{student}/send-whatsapp', [StudentController::class, 'sendResultWhatsapp'])->name('students.sendWhatsapp');
+
 
 
     

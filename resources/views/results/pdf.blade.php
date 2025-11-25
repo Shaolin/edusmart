@@ -19,18 +19,18 @@
         <div id="result-sheet" class="bg-white dark:bg-gray-900 shadow-lg rounded-lg p-4 sm:p-6 relative font-sans">
             
             {{-- Watermark --}}
-            @if($school && $school->logo)
+            {{-- @if($school && $school->logo)
                 <img src="{{ asset('storage/' . $school->logo) }}"
                      class="absolute top-1/2 left-1/2 w-48 sm:w-72 opacity-5 -translate-x-1/2 -translate-y-1/2 rotate-12 z-0">
-            @endif
+            @endif --}}
             
 
             {{-- Header --}}
-            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 relative z-10 mb-6">
+            {{-- <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 relative z-10 mb-6">
                 <div class="flex items-center gap-3">
                     @if($school && $school->logo)
                         <img src="{{ asset('storage/' . $school->logo) }}" class="w-16 h-16 sm:w-20 sm:h-20 object-contain">
-                    @endif
+                    @endif --}}
 
                     <div class="text-sm sm:text-base text-gray-800 dark:text-gray-100">
                         <h1 class="font-bold text-blue-800 dark:text-blue-400 text-lg sm:text-xl">

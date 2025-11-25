@@ -19,11 +19,6 @@ use Illuminate\Support\Facades\Storage;
    use App\Mail\ResultMail;
    use App\Services\ResultService;
    use Illuminate\Validation\Rule;
-   
-   
-
-   
-   
 
 
 
@@ -284,28 +279,31 @@ public function __construct(ResultService $resultService)
 
 
 
-   public function generatePdf($studentId)
+   public function sendResultWhatsapp($studentId)
    {
        $student = Student::with(['school', 'schoolClass', 'guardian', 'results.subject'])->findOrFail($studentId);
-       $term = Term::find(request('term_id'));
-       $session = AcademicSession::find(request('session_id'));
-       $school = $student->school;
+       $term = request('term_id') ? Term::find(request('term_id')) : null;
+       $session = request('session_id') ? AcademicSession::find(request('session_id')) : null;
        $results = $student->results;
-       $position = request('position');
-       $total_students = request('total_students');
    
-       $pdf = Pdf::loadView('results.pdf', compact('student', 'results', 'school', 'term', 'session', 'position', 'total_students'));
-   
+       // Generate PDF
+       $pdf = Pdf::loadView('results.pdf', compact('student', 'results', 'term', 'session'));
        $fileName = 'results/' . $student->id . '.pdf';
-   
-       //  Ensure the folder exists
        Storage::disk('public')->makeDirectory('results');
-   
-       //  Save correctly into public disk
        Storage::disk('public')->put($fileName, $pdf->output());
    
-       return $fileName;
+       // Parent phone in international format
+       $parentPhone = preg_replace('/^0/', '234', $student->guardian_phone ?? $student->guardian->phone);
+   
+       // WhatsApp message
+       $pdfPath = asset('storage/' . $fileName);
+       $message = "Hello, your child's result is ready. Download PDF here: $pdfPath";
+       $encodedMessage = urlencode($message);
+   
+       // Redirect to WhatsApp link
+       return redirect("https://wa.me/{$parentPhone}?text={$encodedMessage}");
    }
+   
    
 
    
