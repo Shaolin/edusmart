@@ -116,45 +116,7 @@
                 </div>
             @endif
 
-            {{-- send result-sheet whatsapp --}}
-
-            @php
-    $parentPhone = preg_replace('/^0/', '234', $student->guardian_phone ?? $student->guardian->phone);
-
-    // Generate PDF and get file path (call the controller method)
-    $pdfPath = asset('storage/results/' . $student->id . '.pdf'); // ensure PDF exists
-
-    $message = "Hello, your child's result is ready. Download PDF here: $pdfPath";
-    $encodedMessage = urlencode($message);
-@endphp
-
-<div class="mt-4 text-center no-print">
-    <a href="https://wa.me/{{ $parentPhone }}?text={{ $encodedMessage }}"
-       target="_blank"
-       class="px-4 py-2 bg-blue-600 text-white rounded text-sm sm:text-base">
-       📄 Send Result to Parent (WhatsApp PDF)
-    </a>
-</div>
-
-
-
-            {{-- Edit Button --}}
-            @if($results->count() > 0)
-            <div class="mt-4 text-center no-print">
-                <a href="{{ route('results.editAll', ['student_id'=>$student->id,'term_id'=>$term->id ?? 0,'session_id'=>$session->id ?? 0]) }}"
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm sm:text-base">
-                    ✏️ Edit Results
-                </a>
-            </div>
-            @endif
-
-            {{-- Print Button --}}
-            <div class="mt-6 text-center no-print">
-                <button onclick="window.print()"
-                    class="bg-green-700 hover:bg-green-800 text-white px-5 py-2 rounded text-sm sm:text-base">
-                    🖨️ Print / Save as PDF
-                </button>
-            </div>
+          
         </div>
     </div>
 </x-app-layout>

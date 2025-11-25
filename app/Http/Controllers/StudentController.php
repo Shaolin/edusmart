@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Mail;
    use App\Mail\ResultMail;
    use App\Services\ResultService;
    use Illuminate\Validation\Rule;
+   
+   
 
    
    
@@ -278,6 +280,27 @@ public function __construct(ResultService $resultService)
    
        return back()->with('success', 'Result sent successfully!');
    }
+
+
+
+public function generatePdf($studentId)
+{
+    $student = Student::with(['school', 'schoolClass', 'guardian', 'results.subject'])->findOrFail($studentId);
+    $term = Term::find(request('term_id')); // or use current term
+    $session = AcademicSession::find(request('session_id'));
+    $school = $student->school;
+    $results = $student->results;
+    $position = $request->position ?? null; 
+    $total_students = $request->total_students ?? null;
+
+    $pdf = Pdf::loadView('results.pdf', compact('student', 'results', 'school', 'term', 'session', 'position', 'total_students'));
+
+    $fileName = 'results/' . $student->id . '.pdf';
+    $pdf->save(storage_path('app/public/' . $fileName));
+
+    return $fileName; // return path to use in WhatsApp link
+}
+
    
    
    
