@@ -15,15 +15,20 @@
     <div class="p-6 max-w-5xl mx-auto relative" id="result-sheet">
         {{-- Watermark --}}
         @if($school && $school->logo)
-            <img src="{{ asset('storage/' . $school->logo) }}"
-                 class="absolute top-1/2 left-1/2 w-48 sm:w-72 opacity-5 -translate-x-1/2 -translate-y-1/2 rotate-12 z-0">
+           
+                 <img src="{{ asset('school_logos/' . $school->logo) }}"
+                 class="absolute top-1/2 left-1/2 w-48 sm:w-72 opacity-5 -translate-x-1/2 -translate-y-1/2 rotate-12 z-0"
+                 alt="School Logo">
         @endif
 
         {{-- School Header --}}
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 relative z-10">
             <div class="flex items-center gap-3">
                 @if($school && $school->logo)
-                    <img src="{{ asset('storage/' . $school->logo) }}" class="w-16 h-16 sm:w-20 sm:h-20 object-contain">
+                 
+                    <img src="{{ asset('school_logos/' . $school->logo) }}"
+                    class="h-16 w-16 object-contain rounded shadow"
+                    alt="School Logo">
                 @endif
                 <div class="text-sm sm:text-base text-gray-800 dark:text-gray-100">
                     <h1 class="font-bold text-blue-800 dark:text-blue-400 text-lg sm:text-xl">{{ $school->name ?? 'School Name' }}</h1>

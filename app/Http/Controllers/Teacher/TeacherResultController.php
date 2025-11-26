@@ -287,7 +287,9 @@ public function download(Student $student, Request $request)
         ->where('term_id', $term->id)
         ->get();
 
-    $school = School::first();
+    // $school = School::first();
+    $school = School::find(Auth::user()->school_id);
+
 
     // compute class position (optional)
     $classStudentIds = Student::where('class_id', $student->class_id)->pluck('id');
