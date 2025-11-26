@@ -20,11 +20,15 @@
             
             {{-- Watermark --}}
             @if($school && $school->logo)
-                <img src="{{ asset('storage/' . $school->logo) }}"
+                {{-- <img src="{{ asset('storage/' . $school->logo) }}"
                 
 
 
-                     class="absolute top-1/2 left-1/2 w-48 sm:w-72 opacity-5 -translate-x-1/2 -translate-y-1/2 rotate-12 z-0">
+                     class="absolute top-1/2 left-1/2 w-48 sm:w-72 opacity-5 -translate-x-1/2 -translate-y-1/2 rotate-12 z-0"> --}}
+
+                     <img src="{{ asset('school_logos/' . $school->logo) }}"
+                     class="absolute top-1/2 left-1/2 w-48 sm:w-72 opacity-5 -translate-x-1/2 -translate-y-1/2 rotate-12 z-0"
+                     alt="School Logo">
             @endif
             
 
@@ -32,8 +36,11 @@
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 relative z-10 mb-6">
                 <div class="flex items-center gap-3">
                     @if($school && $school->logo)
-                          <img src="{{ asset('storage/' . $school->logo) }}"
-                    class="w-16 h-16 sm:w-20 sm:h-20 object-contain">
+                          {{-- <img src="{{ asset('storage/' . $school->logo) }}" --}}
+                          <img src="{{ asset('school_logos/' . $school->logo) }}"
+                          class="h-16 w-16 object-contain rounded shadow"
+                          alt="School Logo">
+                    {{-- class="w-16 h-16 sm:w-20 sm:h-20 object-contain"> --}}
                     @endif
 
                     <div class="text-sm sm:text-base text-gray-800 dark:text-gray-100">
