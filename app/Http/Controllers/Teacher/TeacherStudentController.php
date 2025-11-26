@@ -30,7 +30,7 @@ class TeacherStudentController extends Controller
         }
 
         // --- Pagination ---
-        $perPage = 4; // change this if you want more/less per page
+        $perPage = 10; // change this if you want more/less per page
         $currentPage = $request->input('page', 1);
         $currentItems = $students->slice(($currentPage - 1) * $perPage, $perPage)->all();
 

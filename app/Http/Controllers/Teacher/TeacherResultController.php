@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use App\Models\AcademicSession;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 
 
 class TeacherResultController extends Controller
@@ -35,7 +36,7 @@ class TeacherResultController extends Controller
         }
     
         // 4️⃣ Paginate
-        $students = $query->orderBy('name')->paginate(3);
+        $students = $query->orderBy('name')->paginate(10);
     
         return view('teachers.results.index', [
             'students' => $students,
@@ -195,7 +196,8 @@ public function update(Request $request, Student $student)
                 ->get();
         
             // School data
-            $school = School::first();
+            // $school = School::first();
+            $school  = School::find(Auth::user()->school_id);
         
             // Fetch all students in same class
             $classStudentIds = Student::where('class_id', $student->class_id)->pluck('id');
