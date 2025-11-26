@@ -36,18 +36,15 @@
                     {{-- Logo --}}
                     <div class="flex-shrink-0 flex justify-center sm:block">
                         @if($school->logo)
-                            <img src="{{ asset('storage/' . $school->logo) }}" 
+                            {{-- <img src="{{ asset('storage/' . $school->logo) }}" 
                                 alt="School Logo" 
-                                class="h-24 w-24 object-contain rounded shadow">
+                                class="h-24 w-24 object-contain rounded shadow"> --}}
                                
                       
-     {{-- <img src="{{ route('school.logo', ['filename' => $school->logo]) }}"
+    
+     <img src="{{ asset('school_logos/' . $school->logo) }}"
      class="h-24 w-24 object-contain rounded shadow"
-     alt="School Logo"> --}}
-
-
-                           
-
+     alt="School Logo">
                         @else
                             <div class="h-24 w-24 bg-gray-200 dark:bg-gray-700 flex items-center justify-center rounded">
                                 <span class="text-gray-500 dark:text-gray-300 text-xs">No Logo</span>
