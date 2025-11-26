@@ -39,6 +39,15 @@
                             <img src="{{ asset('storage/' . $school->logo) }}" 
                                 alt="School Logo" 
                                 class="h-24 w-24 object-contain rounded shadow">
+                               
+                      
+     {{-- <img src="{{ route('school.logo', ['filename' => $school->logo]) }}"
+     class="h-24 w-24 object-contain rounded shadow"
+     alt="School Logo"> --}}
+
+
+                           
+
                         @else
                             <div class="h-24 w-24 bg-gray-200 dark:bg-gray-700 flex items-center justify-center rounded">
                                 <span class="text-gray-500 dark:text-gray-300 text-xs">No Logo</span>

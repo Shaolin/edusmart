@@ -54,6 +54,9 @@ class SchoolController extends Controller
             $data['logo'] = $request->file('logo')->store('school_logos', 'public');
         }
 
+       
+
+
         $school = School::create($data);
 
         // Assign this school to admin

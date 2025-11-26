@@ -3,6 +3,7 @@
 use App\Services\WhatsAppService;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FeeController;
+use App\Http\Controllers\LogoController;
 use App\Http\Controllers\TermController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\ResultController;
@@ -15,11 +16,11 @@ use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\GuardianController;
 use App\Http\Controllers\DashboardController;
+
+
 use App\Http\Controllers\FeePaymentController;
 
-
 use App\Http\Controllers\ClassSubjectController;
-
 use App\Http\Controllers\TeacherDashboardController;
 use App\Http\Controllers\Teacher\TeacherClassController;
 use App\Http\Controllers\Teacher\TeacherResultController;
@@ -99,6 +100,17 @@ Route::middleware(['auth'])->group(function () {
 
     
 });
+
+// ===============================
+//  logo
+// ===============================
+
+
+// Route::get('/school_logos/{filename}', [LogoController::class, 'show'])
+//     ->name('school.logo');
+    // Route::get('/school-logo/{filename}', [LogoController::class, 'show'])
+    // ->name('school.logo');
+
 
 // ===============================
 // Guardians
@@ -250,19 +262,6 @@ Route::get('/test-whatsapp', function (WhatsAppService $whatsapp) {
 
 
 
-// ===============================
-// Teacher Controller
-// ===============================
-
-
-
-
-
-// Route::middleware(['auth', 'teacher'])->group(function () {
-//     Route::get('/dashboard/teachers', [TeacherDashboardController::class, 'index'])->name('teachers.dashboard');
-//     Route::get('/dashboard/students', [TeacherDashboardController::class, 'students'])->name('teachers.students');
-//     Route::get('/dashboard/results', [TeacherDashboardController::class, 'results'])->name('teachers.results');
-// });
 
 
 Route::middleware(['auth', 'teacher'])
