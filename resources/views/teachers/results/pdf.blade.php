@@ -117,6 +117,7 @@
         <strong>Total Score:</strong> {{ $total }} <br>
         <strong>Average:</strong> {{ $avg }} <br>
         <strong>Position:</strong> {{ $position ?? '—' }} of {{ $total_students ?? '—' }}
+        <p><strong>Position:</strong> {{ $position ?? '—' }} out of {{ $total_students ?? '—' }}</p>
     </div>
 
     {{-- Result Table --}}

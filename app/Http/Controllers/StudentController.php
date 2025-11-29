@@ -282,27 +282,53 @@ public function __construct(ResultService $resultService)
    public function sendResultWhatsapp($studentId)
    {
        $student = Student::with(['school', 'schoolClass', 'guardian', 'results.subject'])->findOrFail($studentId);
-       $term = request('term_id') ? Term::find(request('term_id')) : null;
-       $session = request('session_id') ? AcademicSession::find(request('session_id')) : null;
-       $results = $student->results;
+   
+       // Get term and session (defaults to latest if not provided)
+       $term = request('term_id') ? Term::find(request('term_id')) : Term::latest()->first();
+       $session = request('session_id') ? AcademicSession::find(request('session_id')) : AcademicSession::latest()->first();
+   
+       $results = Result::where('student_id', $studentId)
+           ->where('term_id', $term->id)
+           ->where('session_id', $session->id)
+           ->with('subject')
+           ->get();
+   
+       if ($results->isEmpty()) {
+           return redirect()->back()->with('warning', '⚠️ No results found for this student.');
+       }
+   
+       // Compute position in class
+       $class_id = $student->schoolClass->id ?? null;
+       $position = $total_students = null;
+   
+       if ($class_id) {
+           $class_averages = Result::selectRaw('student_id, AVG(total_score) as avg_score')
+               ->where('term_id', $term->id)
+               ->where('session_id', $session->id)
+               ->whereHas('student', fn($q) => $q->where('class_id', $class_id))
+               ->groupBy('student_id')
+               ->orderByDesc('avg_score')
+               ->get();
+   
+           $ranked = $class_averages->pluck('student_id')->toArray();
+           $position = $ranked ? array_search($studentId, $ranked) + 1 : null;
+           $total_students = count($ranked);
+       }
    
        // Generate PDF
-    //    $pdf = Pdf::loadView('results.pdf', compact('student', 'results', 'term', 'session'));
-    $pdf = Pdf::loadView('results.pdf', [
-        'student' => $student,
-        'results' => $results,
-        'term' => $term,
-        'session' => $session,
-        'school' => $student->school,
-        'position' => $position ?? null,
-        'total_students' => $total_students ?? null,
-    ]);
-    
+       $pdf = Pdf::loadView('results.pdf', [
+           'student' => $student,
+           'results' => $results,
+           'term' => $term,
+           'session' => $session,
+           'school' => $student->school,
+           'position' => $position,
+           'total_students' => $total_students,
+       ]);
    
        // Truehost public directory
        $folder = $_SERVER['DOCUMENT_ROOT'] . '/results';
    
-       // If folder doesn't exist, create it
        if (!file_exists($folder)) {
            mkdir($folder, 0777, true);
        }
@@ -310,25 +336,23 @@ public function __construct(ResultService $resultService)
        // File path
        $filePath = $folder . '/' . $student->id . '.pdf';
    
-       // Save file
+       // Save PDF
        $pdf->save($filePath);
    
        // Public URL
        $pdfUrl = url('results/' . $student->id . '.pdf');
    
-       // Parent phone
+       // Parent phone (international format)
        $parentPhone = preg_replace('/^0/', '234', $student->guardian_phone ?? $student->guardian->phone);
    
        // WhatsApp message
        $message = "Hello, your child's result is ready. Download PDF here: $pdfUrl";
        $encodedMessage = urlencode($message);
    
+       // Redirect to WhatsApp
        return redirect("https://wa.me/{$parentPhone}?text={$encodedMessage}");
    }
    
-   
-   
-
    
 
    
