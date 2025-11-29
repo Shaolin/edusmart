@@ -287,7 +287,17 @@ public function __construct(ResultService $resultService)
        $results = $student->results;
    
        // Generate PDF
-       $pdf = Pdf::loadView('results.pdf', compact('student', 'results', 'term', 'session'));
+    //    $pdf = Pdf::loadView('results.pdf', compact('student', 'results', 'term', 'session'));
+    $pdf = Pdf::loadView('results.pdf', [
+        'student' => $student,
+        'results' => $results,
+        'term' => $term,
+        'session' => $session,
+        'school' => $student->school,
+        'position' => $position ?? null,
+        'total_students' => $total_students ?? null,
+    ]);
+    
    
        // Truehost public directory
        $folder = $_SERVER['DOCUMENT_ROOT'] . '/results';
