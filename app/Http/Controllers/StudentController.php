@@ -288,19 +288,29 @@ public function __construct(ResultService $resultService)
    
        // Generate PDF
        $pdf = Pdf::loadView('results.pdf', compact('student', 'results', 'term', 'session'));
-       $fileName = 'results/' . $student->id . '.pdf';
-       Storage::disk('public')->makeDirectory('results');
-       Storage::disk('public')->put($fileName, $pdf->output());
+   
+       // Ensure public/results folder exists
+       $folder = public_path('results');
+       if (!file_exists($folder)) {
+           mkdir($folder, 0777, true);
+       }
+   
+       // File path in public folder
+       $filePath = public_path('results/' . $student->id . '.pdf');
+   
+       // Save PDF directly into /public/results
+       $pdf->save($filePath);
    
        // Parent phone in international format
        $parentPhone = preg_replace('/^0/', '234', $student->guardian_phone ?? $student->guardian->phone);
    
+       // Public URL (this ALWAYS works)
+       $pdfUrl = url('results/' . $student->id . '.pdf');
+   
        // WhatsApp message
-       $pdfPath = asset('storage/' . $fileName);
-       $message = "Hello, your child's result is ready. Download PDF here: $pdfPath";
+       $message = "Hello, your child's result is ready. Download PDF here: $pdfUrl";
        $encodedMessage = urlencode($message);
    
-       // Redirect to WhatsApp link
        return redirect("https://wa.me/{$parentPhone}?text={$encodedMessage}");
    }
    
