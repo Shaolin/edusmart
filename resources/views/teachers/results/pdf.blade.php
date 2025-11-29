@@ -1,157 +1,101 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Result Sheet</title>
-
+    <meta charset="UTF-8">
+    <title>Result — {{ $student->name }}</title>
     <style>
-        body {
-            font-family: DejaVu Sans, sans-serif;
-            font-size: 12px;
-            color: #222;
-        }
-
-        .center { text-align: center; }
-
-        .school-header {
-            width: 100%;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #0a4a8b;
-            padding-bottom: 10px;
-        }
-
-        .school-logo {
-            width: 70px;
-            height: 70px;
-            object-fit: contain;
-        }
-
-        .info-box {
-            border: 1px solid #ccc;
-            padding: 10px;
-            border-radius: 6px;
-            background: #f9f9f9;
-            margin-bottom: 15px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 15px;
-        }
-
-        table th {
-            background: #bfe0ff;
-            color: #003366;
-            padding: 6px;
-            border: 1px solid #777;
-        }
-
-        table td {
-            padding: 6px;
-            border: 1px solid #777;
-        }
-
-        .summary-box {
-            border: 1px solid #aaa;
-            padding: 10px;
-            border-radius: 6px;
-            background: #f2f2f2;
-            margin-bottom: 15px;
-        }
-
-        .watermark {
-            position: fixed;
-            top: 35%;
-            left: 25%;
-            width: 400px;
-            opacity: 0.1;
-        }
+        body { font-family: sans-serif; color: #111827; margin: 0; padding: 0; }
+        .container { width: 90%; margin: auto; padding: 20px; background-color: #ffffff; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .school-info h1 { color: #1e40af; font-weight: bold; margin: 0; font-size: 20px; }
+        .school-info p { margin: 0; color: #4b5563; font-size: 12px; }
+        .result-badge { background-color: #facc15; color: #78350f; padding: 4px 8px; font-size: 12px; font-weight: bold; border-radius: 4px; }
+        .student-card, .session-card, .summary-card { border: 1px solid #d1d5db; border-radius: 8px; padding: 10px; margin-bottom: 15px; background-color: #f9fafb; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #d1d5db; padding: 6px; font-size: 12px; text-align: center; }
+        th { background-color: #dbeafe; color: #1e40af; }
+        .teacher-remark { border: 1px solid #d1d5db; border-radius: 8px; padding: 10px; background-color: #f9fafb; margin-top: 15px; }
+        .watermark { position: absolute; top: 50%; left: 50%; width: 200px; opacity: 0.08; transform: translate(-50%, -50%) rotate(-15deg); z-index: 0; }
     </style>
 </head>
 <body>
+    <div class="container">
 
-    {{-- Watermark --}}
-    @if($school && $school->logo)
-        <img src="{{ public_path('school_logos/' . $school->logo) }}" class="watermark">
-    @endif
+        {{-- Watermark --}}
+        @if($school && $school->logo)
+            <img src="{{ public_path('school_logos/' . $school->logo) }}" class="watermark">
+        @endif
 
-    {{-- School Header --}}
-    <table class="school-header">
-        <tr>
-            <td width="80">
-                @if($school && $school->logo)
-                    <img src="{{ public_path('school_logos/' . $school->logo) }}" class="school-logo">
-                @endif
-            </td>
-            <td class="center">
-                <h2 style="margin:0; color:#0a4a8b;">{{ $school->name }}</h2>
-                <p style="margin:0;">{{ $school->address }}</p>
-                <p style="margin:0;">Phone: {{ $school->phone }} | Email: {{ $school->email }}</p>
-                <h3 style="margin:5px 0 0;">{{ $term->name }} — {{ $session->name }}</h3>
-            </td>
-            <td width="80">
-                <span style="background:#ffe28a; padding:4px 6px; border-radius:4px; font-weight:bold;">
-                    RESULT SHEET
-                </span>
-            </td>
-        </tr>
-    </table>
-
-    {{-- Student Info --}}
-    <div class="info-box">
-        <strong>Student Name:</strong> {{ $student->name }} <br>
-        <strong>Admission No:</strong> {{ $student->admission_number ?? '—' }} <br>
-        <strong>Class:</strong> {{ $student->schoolClass->name }} <br>
-        <strong>Date:</strong> {{ now()->format('d M, Y') }}
-    </div>
-
-    {{-- Summary --}}
-    <div class="summary-box">
-        @php
-            $total = $results->sum('total_score');
-            $count = $results->count();
-            $avg = $count ? number_format($total / $count, 2) : 0;
-        @endphp
-
-        <strong>Total Score:</strong> {{ $total }} <br>
-        <strong>Average:</strong> {{ $avg }} <br>
-        <strong>Position:</strong> {{ $position ?? '—' }} of {{ $total_students ?? '—' }}
-        <p><strong>Position:</strong> {{ $position ?? '—' }} out of {{ $total_students ?? '—' }}</p>
-    </div>
-
-    {{-- Result Table --}}
-    <table>
-        <thead>
-            <tr>
-                <th>Subject</th>
-                <th>Test (40)</th>
-                <th>Exam (60)</th>
-                <th>Total</th>
-                <th>Grade</th>
-                <th>Remark</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach($results as $result)
-            <tr>
-                <td>{{ $result->subject->name }}</td>
-                <td class="center">{{ $result->test_score }}</td>
-                <td class="center">{{ $result->exam_score }}</td>
-                <td class="center"><strong>{{ $result->total_score }}</strong></td>
-                <td class="center"><strong>{{ $result->grade }}</strong></td>
-                <td class="center">{{ $result->remark }}</td>
-            </tr>
-        @endforeach
-        </tbody>
-    </table>
-
-    {{-- Teacher Remark --}}
-    @if($results->first() && $results->first()->teacher_remark)
-        <div class="info-box">
-            <strong>Teacher's Remark:</strong> {{ $results->first()->teacher_remark }}
+        {{-- School Header --}}
+        <div class="header">
+            <div class="school-info">
+                <h1>{{ $school->name ?? 'School Name' }}</h1>
+                <p>{{ $school->address ?? '' }}</p>
+                <p>Contact: {{ $school->phone ?? 'Not set' }}</p>
+            </div>
+            <div class="result-badge">Result Sheet</div>
         </div>
-    @endif
 
+        {{-- Student Info Cards --}}
+        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+            <div class="student-card" style="width: 32%;">
+                <strong>Student Info</strong><br>
+                Name: {{ $student->name }}<br>
+                Admission No: {{ $student->admission_number ?? '—' }}<br>
+                Class: {{ $student->schoolClass->name ?? '—' }}
+            </div>
+            <div class="session-card" style="width: 32%;">
+                <strong>Session & Term</strong><br>
+                Term: {{ $term->name ?? '—' }}<br>
+                Session: {{ $session->name ?? '—' }}<br>
+                Date: {{ now()->format('d M, Y') }}
+            </div>
+            <div class="summary-card" style="width: 32%;">
+                <strong>Summary</strong><br>
+                @php
+                    $totalScore = $results->sum('total_score');
+                    $subjectCount = $results->count();
+                    $average = $subjectCount ? number_format($totalScore / $subjectCount, 2) : '0.00';
+                @endphp
+                Total Score: {{ $totalScore }}<br>
+                Average: {{ $average }}<br>
+                Position: {{ $position ?? '—' }} out of {{ $total_students ?? '—' }}
+            </div>
+        </div>
+
+        {{-- Results Table --}}
+        <table>
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>Test (40)</th>
+                    <th>Exam (60)</th>
+                    <th>Total</th>
+                    <th>Grade</th>
+                    <th>Remark</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($results as $result)
+                    <tr>
+                        <td>{{ $result->subject->name }}</td>
+                        <td>{{ $result->test_score }}</td>
+                        <td>{{ $result->exam_score }}</td>
+                        <td>{{ $result->total_score }}</td>
+                        <td>{{ $result->grade }}</td>
+                        <td>{{ $result->remark }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        {{-- Teacher Remark --}}
+        @if($results->first() && $results->first()->teacher_remark)
+            <div class="teacher-remark">
+                <strong>Teacher's Remark:</strong> {{ $results->first()->teacher_remark }}
+            </div>
+        @endif
+
+    </div>
 </body>
 </html>
