@@ -47,3 +47,4 @@ public function sendResultWhatsapp($studentId)
    
    
    
+   {{ route('students.sendWhatsapp', $student->id) }}

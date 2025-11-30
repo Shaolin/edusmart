@@ -111,20 +111,27 @@
         @endif
 
         {{-- Action Buttons --}}
-        <div class="mt-6 flex flex-wrap gap-2">
+       
+        <div class="mt-6 flex flex-col sm:flex-row sm:flex-wrap gap-3 no-print">
+
             <a href="{{ route('teachers.results.edit', $student->id) }}?session={{ request('session') }}&term={{ request('term') }}"
-               class="inline-block px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded">
-                Edit Results
+               class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-center flex-1 sm:flex-none">
+                ✏️ Edit Results
             </a>
-            {{-- <a href="{{ route('teachers.results.report', [$student->id, 'session' => request('session'), 'term' => request('term')]) }}"
-               class="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
-                View Report
-            </a> --}}
+        
             <a href="{{ route('teachers.results.download', [$student->id, 'session' => request('session'), 'term' => request('term')]) }}"
-               class="inline-block px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white rounded">
-                Download PDF
+               class="px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white rounded text-center flex-1 sm:flex-none">
+                📥 Download PDF
             </a>
+        
+            <a href=" {{ route('students.sendWhatsapp', $student->id) }}"
+               target="_blank"
+               class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-center flex-1 sm:flex-none">
+                📄 Send Result
+            </a>
+        
         </div>
+        
     </div>
 
     <style>

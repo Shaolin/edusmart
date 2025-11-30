@@ -25,6 +25,7 @@ use App\Http\Controllers\TeacherDashboardController;
 use App\Http\Controllers\Teacher\TeacherClassController;
 use App\Http\Controllers\Teacher\TeacherResultController;
 use App\Http\Controllers\Teacher\TeacherStudentController;
+use App\Http\Controllers\Admin\ClassSubjectTeacherController;
 
 /*
 |--------------------------------------------------------------------------
@@ -277,6 +278,14 @@ Route::middleware(['auth', 'teacher'])
     // Teacher routes
 Route::prefix('teacher')->name('teachers.')->middleware(['auth', 'teacher'])->group(function () {
     Route::get('/students', [TeacherStudentController::class, 'index'])->name('students');
+
+      // Send result route for teachers
+  
+
+Route::get('/send-result/{student}', [TeacherResultController::class, 'sendResultWhatsapp'])
+    ->name('results.send');
+
+
 });
 
     
@@ -318,7 +327,7 @@ Route::prefix('teacher')->middleware(['auth'])->group(function () {
 // Class Subject Controller
 // ===============================
 
-use App\Http\Controllers\Admin\ClassSubjectTeacherController;
+
 
 // Show all assignments
 Route::get('/admin/class-subject-teacher', [ClassSubjectController::class, 'index'])
