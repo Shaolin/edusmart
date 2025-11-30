@@ -21,34 +21,18 @@
 <body>
     <div class="container">
 
-        <div class="header" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom:15px;">
-    
-            {{-- Logo + School Info --}}
-            <div style="display: flex; align-items: center; gap: 10px;">
-                @if($school && $school->logo)
-                    <img src="{{ asset('school_logos/' . $school->logo) }}" 
-                         alt="School Logo" 
-                         style="width: 60px; height: 60px; object-fit: cover; border-radius: 5px;">
-                @endif
-                <div>
-                    <div class="school-name" style="font-weight:bold; color:#1e40af; font-size:16px;">
-                        {{ $school->name ?? 'School Name' }}
-                    </div>
-                    <div class="school-contact" style="font-size:10px; color:#4b5563;">
-                        {{ $school->address ?? '' }}<br>
-                        Contact: {{ $school->phone ?? 'Not set' }}
-                    </div>
-                </div>
-            </div>
+        @if($school && $school->logo)
         
-            {{-- Result Badge --}}
-            <div class="result-badge" style="background-color:#facc15; color:#78350f; font-weight:bold; font-size:10px; padding:3px 6px; border-radius:3px; white-space:nowrap;">
-                Result Sheet
-            </div>
-        
-        </div>
-        
+              <img src="{{ asset('school_logos/' . $school->logo) }}" class="watermark">
+        @endif
 
+        
+        <div class="header">
+            <span class="school-name">{{ $school->name ?? 'School Name' }}</span>
+            <span class="result-badge">Result Sheet</span><br>
+            <span class="school-contact">{{ $school->address ?? '' }}</span><br>
+            <span class="school-contact">Contact: {{ $school->phone ?? 'Not set' }}</span>
+        </div>
 
         {{-- Info Cards using table --}}
         <table style="margin-bottom:10px;">
