@@ -22,6 +22,7 @@ use App\Http\Controllers\FeePaymentController;
 
 use App\Http\Controllers\ClassSubjectController;
 use App\Http\Controllers\TeacherDashboardController;
+use App\Http\Controllers\Teacher\AttendanceController;
 use App\Http\Controllers\Teacher\TeacherClassController;
 use App\Http\Controllers\Teacher\TeacherResultController;
 use App\Http\Controllers\Teacher\TeacherStudentController;
@@ -205,6 +206,11 @@ Route::middleware(['auth'])->group(function () {
 
     // Existing show method
     Route::get('/receipts/{payment}', [ReceiptController::class, 'show'])->name('receipts.show');
+
+
+    Route::get('students/{student}/fees/download', [StudentController::class, 'downloadReceipt'])->name('students.fees.download');
+Route::get('students/{student}/fees/sendWhatsapp', [StudentController::class, 'sendReceiptWhatsapp'])->name('students.fees.sendWhatsapp');
+
 });
 
 
@@ -273,6 +279,10 @@ Route::middleware(['auth', 'teacher'])
         Route::get('/students', [TeacherStudentController::class, 'index'])->name('students');
         Route::get('/results', [TeacherResultController::class, 'index'])->name('results');
         Route::get('/classes', [TeacherClassController::class, 'index'])->name('classes');
+
+         // New Attendance Routes
+         Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+         Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
     });
 
     // Teacher routes
@@ -284,6 +294,8 @@ Route::prefix('teacher')->name('teachers.')->middleware(['auth', 'teacher'])->gr
 
 Route::get('/send-result/{student}', [TeacherResultController::class, 'sendResultWhatsapp'])
     ->name('results.send');
+
+    
 
 
 });
@@ -308,7 +320,7 @@ Route::prefix('teacher')->middleware(['auth'])->group(function () {
     Route::get('students/{student}/results', [TeacherResultController::class, 'edit'])->name('teachers.results.edit');
 
     // Save result entries
-    Route::post('students/{student}/results', [TeacherResultController::class, 'update'])->name('teachers.results.update');
+    Route::put('students/{student}/results', [TeacherResultController::class, 'update'])->name('teachers.results.update');
        
      // View Result 
     Route::get('/teacher/results/{student}/view', [TeacherResultController::class, 'show'])
@@ -355,6 +367,13 @@ Route::delete('/admin/class-subject-teacher/{assignment}', [ClassSubjectControll
 
   
 
+// Attendance
+
+
+// Route::middleware(['auth', 'teacher'])->group(function () {
+//     Route::get('/teacher/attendance', [AttendanceController::class, 'index'])->name('teachers.attendance.index');
+//     Route::post('/teacher/attendance', [AttendanceController::class, 'store'])->name('teachers.attendance.store');
+// });
 
 
 

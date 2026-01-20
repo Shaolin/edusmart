@@ -20,6 +20,15 @@ use Illuminate\Support\Facades\Storage;
    use App\Services\ResultService;
    use Illuminate\Validation\Rule;
 
+   use App\Models\Fee;
+use App\Models\FeePayment;
+use App\Models\StudentFee;
+
+
+   
+
+  
+
 
 
 
@@ -352,6 +361,134 @@ public function __construct(ResultService $resultService)
        // Redirect to WhatsApp
        return redirect("https://wa.me/{$parentPhone}?text={$encodedMessage}");
    }
+
+ // download reciept
+
+ 
+
+ public function downloadReceipt($studentId)
+ {
+     $student = Student::with(['school', 'schoolClass'])->findOrFail($studentId);
+ 
+     // Get term & session (same pattern as results)
+     $term = request('term') ?? Term::latest()->value('name');
+     $session = request('session') ?? AcademicSession::latest()->value('name');
+ 
+     // Fetch payments (THIS IS THE FIX)
+     $payments = FeePayment::where('student_id', $studentId)
+         ->where('term', $term)
+         ->where('session', $session)
+         ->orderBy('payment_date')
+         ->get();
+ 
+     if ($payments->isEmpty()) {
+         return back()->with('warning', '⚠️ No payments found for this term.');
+     }
+ 
+     $totalPaid = $payments->sum('amount');
+ 
+     // Generate PDF
+$pdf = Pdf::loadView('receipts.pdf', [
+    'student'   => $student,
+    'payments'  => $payments,
+    'term'      => $term,
+    'session'   => $session,
+    'school'    => $student->school,
+    'totalPaid' => $totalPaid,
+]);
+
+// Sanitize for filename
+$safeTerm = str_replace(['/', '\\', ' '], '-', $term);
+$safeSession = str_replace(['/', '\\'], '-', $session);
+
+// USE the sanitized values here
+return $pdf->download(
+    'receipt_' .
+    $student->admission_number . '_' .
+    $safeTerm . '_' .
+    $safeSession . '.pdf'
+);
+
+
+
+
+
+ }
+ 
+// send reciept to whatsapp
+
+
+
+
+
+public function sendReceiptWhatsapp($studentId)
+{
+    $student = Student::with(['school', 'schoolClass', 'guardian'])->findOrFail($studentId);
+
+    // Get all payments for this student
+    $payments = FeePayment::where('student_id', $studentId)->get();
+
+    if ($payments->isEmpty()) {
+        return back()->with('warning', '⚠️ No fee payments found for this student.');
+    }
+
+    // ✅ Derive term & session from payments (SAFE)
+    $term = $payments->first()->term ?? '—';
+    $session = $payments->first()->session ?? '—';
+
+    // Generate PDF
+    $pdf = Pdf::loadView('receipts.pdf', [
+        'student'  => $student,
+        'payments' => $payments,
+        'school'   => $student->school,
+        'term'     => $term,
+        'session'  => $session,
+    ]);
+
+    // Public directory (same pattern as result)
+    $folder = $_SERVER['DOCUMENT_ROOT'] . '/receipts';
+
+    if (!file_exists($folder)) {
+        mkdir($folder, 0777, true);
+    }
+
+    $filePath = $folder . '/' . $student->id . '.pdf';
+    $pdf->save($filePath);
+
+    // Public URL
+    $pdfUrl = url('receipts/' . $student->id . '.pdf');
+
+    $parentPhone = $student->guardian->phone ?? '';
+
+    // remove everything except digits
+    $parentPhone = preg_replace('/\D+/', '', $parentPhone);
+    
+    // Nigerian format fixes
+    if (str_starts_with($parentPhone, '0')) {
+        $parentPhone = '234' . substr($parentPhone, 1);
+    }
+    
+    if (str_starts_with($parentPhone, '2340')) {
+        $parentPhone = '234' . substr($parentPhone, 4);
+    }
+    
+    // WhatsApp message
+    $message = "Hello, your child's school fee receipt is ready. Download PDF here: $pdfUrl";
+    $encodedMessage = urlencode($message);
+
+    return redirect("https://wa.me/{$parentPhone}?text={$encodedMessage}");
+}
+
+
+
+
+
+ 
+
+
+  
+
+
    
    
 

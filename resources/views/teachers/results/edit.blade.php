@@ -8,6 +8,7 @@
     <div class="p-6">
         <form action="{{ route('teachers.results.update', $student->id) }}" method="POST">
             @csrf
+            @method('PUT')
             <input type="hidden" name="student_id" value="{{ $student->id }}">
 
             {{-- Session & Term --}}

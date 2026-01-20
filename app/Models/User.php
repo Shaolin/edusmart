@@ -21,6 +21,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',       // <-- add this
+        'school_id',  // <-- add this
     ];
 
     /**

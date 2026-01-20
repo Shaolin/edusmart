@@ -66,6 +66,9 @@ class TeacherController extends Controller
             'school_id' => $user->school_id,
         ]);
 
+      
+        
+
         // Create teacher record
         Teacher::create([
             'user_id' => $userTeacher->id,

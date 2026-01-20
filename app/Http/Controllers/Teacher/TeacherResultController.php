@@ -75,6 +75,7 @@ class TeacherResultController extends Controller
         if (!$teacher->formClasses->pluck('id')->contains($student->class_id)) {
             abort(403, 'You are not authorized to update results for this student.');
         }
+        
 
         $data = $request->validate([
             'session_id'   => 'required|exists:sessions,id',

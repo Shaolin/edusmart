@@ -29,11 +29,15 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
 
             @php
-                $cards = [
-                    ['name' => 'Students', 'route' => 'teachers.students', 'color' => 'blue'],
-                    ['name' => 'Results',  'route' => 'teachers.results.index', 'color' => 'red'],
-                ];
-            @endphp
+               
+    $cards = [
+        ['name' => 'Students',   'route' => 'teachers.students',       'color' => 'blue'],
+        ['name' => 'Results',    'route' => 'teachers.results.index',  'color' => 'red'],
+        ['name' => 'Attendance', 'route' => 'teachers.attendance.index','color' => 'green'], // New card
+    ];
+@endphp
+
+        
 
             @foreach($cards as $card)
                 <a href="{{ $card['route'] !== '#' ? route($card['route']) : '#' }}"

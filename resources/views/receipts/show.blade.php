@@ -104,6 +104,24 @@
                 <p class="text-blue-600 dark:text-blue-400 font-semibold">Thank you for your payment!</p>
             </div>
 
+ {{-- Action Buttons --}}
+<div class="mt-6 flex flex-col sm:flex-row sm:flex-wrap gap-3 no-print">
+    <a href="{{ route('students.fees.download', [$student->id, 'session' => request('session'), 'term' => request('term')]) }}"
+       class="px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white rounded text-center flex-1 sm:flex-none">
+        📥 Download PDF
+    </a>
+   
+
+    <a href="{{ route('students.fees.sendWhatsapp', $student->id) }}"
+        target="_blank"
+        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">
+         📄 Send Receipt
+     </a>
+     
+     
+</div>
+
+
         </div>
     </div>
 </x-app-layout>

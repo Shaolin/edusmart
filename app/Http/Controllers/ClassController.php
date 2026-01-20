@@ -40,39 +40,60 @@ class ClassController extends Controller
     public function show(Request $request, $id)
     {
         $user = Auth::user();
-
+    
+        // Load class with fees
         $class = SchoolClass::with(['formTeacher.user', 'fees'])
                     ->where('school_id', $user->school_id)
                     ->findOrFail($id);
-
+    
+        // Get selected term from query (default to 'first')
+        $selectedTerm = $request->query('term', 'first');
+    
+        // You can get active session dynamically from your sessions table
+        $activeSession = $request->query('session', '2025/2026');
+    
+        // Filter fees for selected term & session
+        $feesForTerm = $class->fees->where('term', $selectedTerm)
+                                   ->where('session', $activeSession);
+    
+        $latestFee = $feesForTerm->max('amount') ?? 0;
+    
+        // Students query
+        $studentsQuery = $class->students()->with(['feePayments']);
+    
+        // Apply fee status filter (fully-paid, partial, unpaid)
         $feeFilter = $request->query('fee_status', 'all');
-        $latestFee = $class->fees->max('amount') ?? 0;
-
-        $studentsQuery = $class->students()->with('feePayments');
-
-        // Apply fee filter
-        $studentsQuery->where(function($query) use ($feeFilter, $latestFee) {
+    
+        $studentsQuery->where(function($query) use ($feeFilter, $latestFee, $selectedTerm, $activeSession) {
             if ($feeFilter === 'fully-paid') {
-                $query->whereHas('feePayments', function($q) use ($latestFee) {
-                    $q->selectRaw('student_id, SUM(amount) as total_paid')
+                $query->whereHas('feePayments', function($q) use ($latestFee, $selectedTerm, $activeSession) {
+                    $q->where('term', $selectedTerm)
+                      ->where('session', $activeSession)
+                      ->selectRaw('student_id, SUM(amount) as total_paid')
                       ->groupBy('student_id')
                       ->havingRaw('SUM(amount) >= ?', [$latestFee]);
                 });
             } elseif ($feeFilter === 'partial') {
-                $query->whereHas('feePayments', function($q) use ($latestFee) {
-                    $q->selectRaw('student_id, SUM(amount) as total_paid')
+                $query->whereHas('feePayments', function($q) use ($latestFee, $selectedTerm, $activeSession) {
+                    $q->where('term', $selectedTerm)
+                      ->where('session', $activeSession)
+                      ->selectRaw('student_id, SUM(amount) as total_paid')
                       ->groupBy('student_id')
                       ->havingRaw('SUM(amount) < ? AND SUM(amount) > 0', [$latestFee]);
                 });
             } elseif ($feeFilter === 'unpaid') {
-                $query->whereDoesntHave('feePayments');
+                $query->whereDoesntHave('feePayments', function($q) use ($selectedTerm, $activeSession) {
+                    $q->where('term', $selectedTerm)
+                      ->where('session', $activeSession);
+                });
             }
         });
-
+    
         $students = $studentsQuery->paginate(20)->withQueryString();
-
-        return view('classes.show', compact('class', 'students', 'latestFee', 'feeFilter'));
+    
+        return view('classes.show', compact('class', 'students', 'latestFee', 'feeFilter', 'selectedTerm', 'activeSession'));
     }
+    
 
     /**
      * Create form (Admin only)

@@ -22,20 +22,37 @@
                     <div></div>
                 </div>
 
-                <!-- Fee Filter -->
-                <form method="GET" class="mb-4">
-                    <label for="fee_status" class="text-sm font-medium">Filter by Fees:</label>
-                    <select name="fee_status" id="fee_status" onchange="this.form.submit()"
-                            class="px-3 py-1 border rounded dark:bg-gray-700 dark:text-gray-100">
-                        <option value="all" {{ $feeFilter === 'all' ? 'selected' : '' }}>All Students</option>
-                        <option value="fully-paid" {{ $feeFilter === 'fully-paid' ? 'selected' : '' }}>Fully Paid</option>
-                        <option value="partial" {{ $feeFilter === 'partial' ? 'selected' : '' }}>Partial Payment</option>
-                        <option value="unpaid" {{ $feeFilter === 'unpaid' ? 'selected' : '' }}>Not Paid</option>
-                    </select>
+                <!-- Term & Fee Filter -->
+                <form method="GET" class="mb-4 flex items-center gap-4">
+                    <div>
+                        <label for="term" class="text-sm font-medium">Select Term:</label>
+                        <select name="term" id="term" onchange="this.form.submit()"
+                                class="px-3 py-1 border rounded dark:bg-gray-700 dark:text-gray-100">
+                            @foreach(['first', 'second', 'third'] as $termOption)
+                                <option value="{{ $termOption }}" {{ $selectedTerm === $termOption ? 'selected' : '' }}>
+                                    {{ ucfirst($termOption) }} Term
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="fee_status" class="text-sm font-medium">Filter by Fees:</label>
+                        <select name="fee_status" id="fee_status" onchange="this.form.submit()"
+                                class="px-3 py-1 border rounded dark:bg-gray-700 dark:text-gray-100">
+                            <option value="all" {{ $feeFilter === 'all' ? 'selected' : '' }}>All Students</option>
+                            <option value="fully-paid" {{ $feeFilter === 'fully-paid' ? 'selected' : '' }}>Fully Paid</option>
+                            <option value="partial" {{ $feeFilter === 'partial' ? 'selected' : '' }}>Partial Payment</option>
+                            <option value="unpaid" {{ $feeFilter === 'unpaid' ? 'selected' : '' }}>Not Paid</option>
+                        </select>
+                    </div>
                 </form>
 
                 @php
-                    $latestFee = $class->fees->max('amount') ?? 0;
+                    $feesForTerm = $class->fees->where('term', $selectedTerm)
+                                               ->where('session', $activeSession);
+                    $latestFee = $feesForTerm->max('amount') ?? 0;
+
                     $totalFee = 0;
                     $totalPaidSum = 0;
                     $totalBalance = 0;
@@ -59,12 +76,18 @@
                             <tbody>
                                 @foreach($students as $student)
                                     @php
-                                        $totalPaid = $student->feePayments->sum('amount');
+                                        $totalPaid = $student->feePayments
+                                                             ->where('term', $selectedTerm)
+                                                             ->where('session', $activeSession)
+                                                             ->sum('amount');
                                         $balance = max($latestFee - $totalPaid, 0);
-                                        $lastPayment = $student->feePayments->sortByDesc('created_at')->first();
+                                        $lastPayment = $student->feePayments
+                                                               ->where('term', $selectedTerm)
+                                                               ->where('session', $activeSession)
+                                                               ->sortByDesc('created_at')
+                                                               ->first();
                                         $lastDate = $lastPayment ? $lastPayment->created_at->format('Y-m-d') : '—';
 
-                                        // Accumulate totals
                                         $totalFee += $latestFee;
                                         $totalPaidSum += $totalPaid;
                                         $totalBalance += $balance;
@@ -93,7 +116,7 @@
                         </table>
                     </div>
 
-                    <!-- Pagination (if using Laravel pagination for $students) -->
+                    <!-- Pagination -->
                     <div class="mt-4">
                         {{ $students->links() }}
                     </div>

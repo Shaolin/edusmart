@@ -18,6 +18,17 @@ class Fee extends Model
         'school_id',
     ];
 
+    // protected $fillable = [
+    //     'class_id',
+    //     'name',
+    //     'amount',
+    //     'term',         
+    //     'session',      
+    //     'session_id',   
+    //     'term_id',      
+    //     'school_id',
+    // ];
+
     // Relationship: belongs to a class
     public function schoolClass()
     {
