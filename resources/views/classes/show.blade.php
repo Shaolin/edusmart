@@ -22,37 +22,34 @@
                     <div></div>
                 </div>
 
-                <!-- Term & Fee Filter -->
-                <form method="GET" class="mb-4 flex items-center gap-4">
-                    <div>
-                        <label for="term" class="text-sm font-medium">Select Term:</label>
-                        <select name="term" id="term" onchange="this.form.submit()"
-                                class="px-3 py-1 border rounded dark:bg-gray-700 dark:text-gray-100">
-                            @foreach(['first', 'second', 'third'] as $termOption)
-                                <option value="{{ $termOption }}" {{ $selectedTerm === $termOption ? 'selected' : '' }}>
-                                    {{ ucfirst($termOption) }} Term
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                <!-- Fee Filter -->
+                <form method="GET" class="mb-4">
+                    <select name="term" onchange="this.form.submit()" class="px-3 py-1 border rounded dark:bg-gray-700">
+                        <option value="first" {{ $uiTerm === 'first' ? 'selected' : '' }}>First Term</option>
+                        <option value="second" {{ $uiTerm === 'second' ? 'selected' : '' }}>Second Term</option>
+                        <option value="third" {{ $uiTerm === 'third' ? 'selected' : '' }}>Third Term</option>
+                    </select>
 
-                    <div>
-                        <label for="fee_status" class="text-sm font-medium">Filter by Fees:</label>
-                        <select name="fee_status" id="fee_status" onchange="this.form.submit()"
-                                class="px-3 py-1 border rounded dark:bg-gray-700 dark:text-gray-100">
-                            <option value="all" {{ $feeFilter === 'all' ? 'selected' : '' }}>All Students</option>
-                            <option value="fully-paid" {{ $feeFilter === 'fully-paid' ? 'selected' : '' }}>Fully Paid</option>
-                            <option value="partial" {{ $feeFilter === 'partial' ? 'selected' : '' }}>Partial Payment</option>
-                            <option value="unpaid" {{ $feeFilter === 'unpaid' ? 'selected' : '' }}>Not Paid</option>
-                        </select>
-                    </div>
+                    <label for="fee_status" class="text-sm font-medium">Filter by Fees:</label>
+                    <select name="fee_status" id="fee_status" onchange="this.form.submit()"
+                            class="px-3 py-1 border rounded dark:bg-gray-700 dark:text-gray-100">
+                        <option value="all" {{ $feeFilter === 'all' ? 'selected' : '' }}>All Students</option>
+                        <option value="fully-paid" {{ $feeFilter === 'fully-paid' ? 'selected' : '' }}>Fully Paid</option>
+                        <option value="partial" {{ $feeFilter === 'partial' ? 'selected' : '' }}>Partial Payment</option>
+                        <option value="unpaid" {{ $feeFilter === 'unpaid' ? 'selected' : '' }}>Not Paid</option>
+                    </select>
                 </form>
 
                 @php
-                    $feesForTerm = $class->fees->where('term', $selectedTerm)
-                                               ->where('session', $activeSession);
-                    $latestFee = $feesForTerm->max('amount') ?? 0;
+                    // ✅ Active fee per term/session
+                    $activeFee = $class->fees
+                        ->where('term', $uiTerm)  // fees table uses first/second/third
+                        ->where('session', $activeSession)
+                        ->first();
 
+                    $latestFee = $activeFee?->amount ?? 0;
+
+                    // Initialize totals
                     $totalFee = 0;
                     $totalPaidSum = 0;
                     $totalBalance = 0;
@@ -76,22 +73,31 @@
                             <tbody>
                                 @foreach($students as $student)
                                     @php
-                                        $totalPaid = $student->feePayments
-                                                             ->where('term', $selectedTerm)
-                                                             ->where('session', $activeSession)
-                                                             ->sum('amount');
-                                        $balance = max($latestFee - $totalPaid, 0);
-                                        $lastPayment = $student->feePayments
-                                                               ->where('term', $selectedTerm)
-                                                               ->where('session', $activeSession)
-                                                               ->sortByDesc('created_at')
-                                                               ->first();
+                                        // ✅ Map UI term to feePayments term
+                                        $termMap = [
+                                            'first'  => 'First Term',
+                                            'second' => 'Second Term',
+                                            'third'  => 'Third Term',
+                                        ];
+                                        $paymentTerm = $termMap[$uiTerm] ?? 'First Term';
+
+                                        // Filter payments for this term/session
+                                        $termPayments = $student->feePayments
+                                            ->where('term', $paymentTerm)
+                                            ->where('session', $activeSession);
+
+                                        $totalPaid = $termPayments->sum('amount');
+                                        $balance   = max($latestFee - $totalPaid, 0);
+
+                                        $lastPayment = $termPayments->sortByDesc('created_at')->first();
                                         $lastDate = $lastPayment ? $lastPayment->created_at->format('Y-m-d') : '—';
 
+                                        // Accumulate class totals
                                         $totalFee += $latestFee;
                                         $totalPaidSum += $totalPaid;
                                         $totalBalance += $balance;
                                     @endphp
+
                                     <tr class="border-b dark:border-gray-700">
                                         <td class="px-4 py-2">{{ $student->name }}</td>
                                         <td class="px-4 py-2">{{ $student->admission_number }}</td>
@@ -116,30 +122,22 @@
                         </table>
                     </div>
 
-                    <!-- Pagination -->
                     <div class="mt-4">
                         {{ $students->links() }}
                     </div>
                 @endif
 
-                <!-- Actions -->
                 <div class="mt-6 flex flex-wrap gap-3">
                     @if(auth()->user()->role === 'admin')
-                        <a href="{{ route('classes.edit', $class->id) }}" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700">
-                            Edit
-                        </a>
+                        <a href="{{ route('classes.edit', $class->id) }}" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700">Edit</a>
                         <form action="{{ route('classes.destroy', $class->id) }}" method="POST" class="inline">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                                onclick="return confirm('Are you sure you want to delete this class?')">
-                                Delete
-                            </button>
+                                onclick="return confirm('Are you sure you want to delete this class?')">Delete</button>
                         </form>
                     @endif
-                    <a href="{{ route('classes.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
-                        Back to List
-                    </a>
+                    <a href="{{ route('classes.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Back to List</a>
                 </div>
 
             </div>

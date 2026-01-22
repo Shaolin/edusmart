@@ -32,31 +32,23 @@ class AttendanceController extends Controller
      * Store attendance
      */
     public function store(Request $request)
-    {
-        $request->validate([
-            'date' => 'required|date',
-            'status' => 'required|array'
-        ]);
+{
+    $presentIds = $request->attendance ?? [];
 
-        $teacher = Auth::user();
-
-        foreach ($request->status as $studentId => $status) {
-            Attendance::updateOrCreate(
-                [
-                    'student_id' => $studentId,
-                    'date' => $request->date,
-                ],
-                [
-                    'teacher_id' => $teacher->id,
-                    'school_id' => $teacher->school_id,
-                    'status' => $status,
-                ]
-            );
-        }
-
-        return redirect()
-            ->back()
-            ->with('success', 'Attendance saved successfully!');
+    foreach (Student::all() as $student) {
+        Attendance::updateOrCreate(
+            [
+                'student_id' => $student->id,
+                'date' => now()->toDateString(),
+            ],
+            [
+                'status' => in_array($student->id, $presentIds) ? 'present' : 'absent',
+            ]
+        );
     }
+
+    return back()->with('success', 'Attendance saved successfully.');
+}
+
 }
 

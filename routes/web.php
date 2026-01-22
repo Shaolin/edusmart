@@ -379,6 +379,11 @@ Route::delete('/admin/class-subject-teacher/{assignment}', [ClassSubjectControll
 
 
 
+// ===============================
+// Forget Password
+// ===============================
+
+
 
 
 

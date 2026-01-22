@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\Teacher;
-use App\Models\SchoolClass;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 
 class ClassController extends Controller
@@ -37,62 +36,98 @@ class ClassController extends Controller
     /**
      * Show a single class
      */
-    public function show(Request $request, $id)
-    {
-        $user = Auth::user();
+  
+       
     
-        // Load class with fees
-        $class = SchoolClass::with(['formTeacher.user', 'fees'])
-                    ->where('school_id', $user->school_id)
-                    ->findOrFail($id);
     
-        // Get selected term from query (default to 'first')
-        $selectedTerm = $request->query('term', 'first');
+     public function show(Request $request, $id)
+     {
+         $user = Auth::user();
+     
+         // 1️⃣ UI term input (from dropdown) - normalize to lowercase
+         $uiTerm = strtolower($request->query('term', 'first'));
+     
+         // 2️⃣ Map UI term -> fee_payments term
+         $termMap = [
+             'first'  => 'First Term',
+             'second' => 'Second Term',
+             'third'  => 'Third Term',
+         ];
+     
+         $paymentTerm = $termMap[$uiTerm] ?? 'First Term'; // for fee_payments table
+         $feeTerm     = $uiTerm;                           // for fees table (first, second, third)
+     
+         $activeSession = $request->query('session', '2025/2026');
+         $feeFilter     = $request->query('fee_status', 'all');
+     
+         // 3️⃣ Load class
+         $class = SchoolClass::with('formTeacher.user')->where('school_id', $user->school_id)->findOrFail($id);
+     
+         // 4️⃣ Active fee for this term/session (fees table)
+         $activeFee = $class->fees()
+             ->where('term', $feeTerm)
+             ->where('session', $activeSession)
+             ->latest()
+             ->first();
+     
+         $latestFee = $activeFee?->amount ?? 0; // ✅ Total Fee per term
+     
+         // 5️⃣ Students with only payments for this term/session
+         $studentsQuery = $class->students()
+             ->with(['feePayments' => function ($q) use ($paymentTerm, $activeSession) {
+                 $q->where('term', $paymentTerm)
+                   ->where('session', $activeSession);
+             }]);
+     
+         // 6️⃣ Fee filters
+         if ($feeFilter !== 'all') {
+             $studentsQuery->where(function ($q) use ($feeFilter, $latestFee, $paymentTerm, $activeSession) {
+     
+                 if ($feeFilter === 'fully-paid') {
+                     $q->whereHas('feePayments', function ($p) use ($latestFee, $paymentTerm, $activeSession) {
+                         $p->where('term', $paymentTerm)
+                           ->where('session', $activeSession)
+                           ->groupBy('student_id')
+                           ->havingRaw('SUM(amount) >= ?', [$latestFee]);
+                     });
+                 }
+     
+                 if ($feeFilter === 'partial') {
+                     $q->whereHas('feePayments', function ($p) use ($latestFee, $paymentTerm, $activeSession) {
+                         $p->where('term', $paymentTerm)
+                           ->where('session', $activeSession)
+                           ->groupBy('student_id')
+                           ->havingRaw('SUM(amount) > 0 AND SUM(amount) < ?', [$latestFee]);
+                     });
+                 }
+     
+                 if ($feeFilter === 'unpaid') {
+                     $q->whereDoesntHave('feePayments', function ($p) use ($paymentTerm, $activeSession) {
+                         $p->where('term', $paymentTerm)
+                           ->where('session', $activeSession);
+                     });
+                 }
+             });
+         }
+     
+         $students = $studentsQuery->paginate(20)->withQueryString();
+     
+         return view('classes.show', compact(
+             'class',
+             'students',
+             'latestFee',
+             'feeFilter',
+             'uiTerm',       // for dropdown selected
+             'paymentTerm',  // for payment queries
+             'activeSession'
+         ));
+     }
+     
     
-        // You can get active session dynamically from your sessions table
-        $activeSession = $request->query('session', '2025/2026');
     
-        // Filter fees for selected term & session
-        $feesForTerm = $class->fees->where('term', $selectedTerm)
-                                   ->where('session', $activeSession);
+     
     
-        $latestFee = $feesForTerm->max('amount') ?? 0;
     
-        // Students query
-        $studentsQuery = $class->students()->with(['feePayments']);
-    
-        // Apply fee status filter (fully-paid, partial, unpaid)
-        $feeFilter = $request->query('fee_status', 'all');
-    
-        $studentsQuery->where(function($query) use ($feeFilter, $latestFee, $selectedTerm, $activeSession) {
-            if ($feeFilter === 'fully-paid') {
-                $query->whereHas('feePayments', function($q) use ($latestFee, $selectedTerm, $activeSession) {
-                    $q->where('term', $selectedTerm)
-                      ->where('session', $activeSession)
-                      ->selectRaw('student_id, SUM(amount) as total_paid')
-                      ->groupBy('student_id')
-                      ->havingRaw('SUM(amount) >= ?', [$latestFee]);
-                });
-            } elseif ($feeFilter === 'partial') {
-                $query->whereHas('feePayments', function($q) use ($latestFee, $selectedTerm, $activeSession) {
-                    $q->where('term', $selectedTerm)
-                      ->where('session', $activeSession)
-                      ->selectRaw('student_id, SUM(amount) as total_paid')
-                      ->groupBy('student_id')
-                      ->havingRaw('SUM(amount) < ? AND SUM(amount) > 0', [$latestFee]);
-                });
-            } elseif ($feeFilter === 'unpaid') {
-                $query->whereDoesntHave('feePayments', function($q) use ($selectedTerm, $activeSession) {
-                    $q->where('term', $selectedTerm)
-                      ->where('session', $activeSession);
-                });
-            }
-        });
-    
-        $students = $studentsQuery->paginate(20)->withQueryString();
-    
-        return view('classes.show', compact('class', 'students', 'latestFee', 'feeFilter', 'selectedTerm', 'activeSession'));
-    }
     
 
     /**
@@ -119,25 +154,19 @@ class ClassController extends Controller
         $this->authorizeAdmin();
 
         $user = Auth::user();
-
         $validated = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('classes')->where(fn($query) => $query->where('school_id', $user->school_id)),
-            ],
-            'section' => 'nullable|string|max:255',
+            'name'            => 'required|string|max:255|unique:classes,name',
+            'section'         => 'nullable|string|max:255',
             'form_teacher_id' => 'nullable|exists:teachers,id',
-            'next_class_id' => 'nullable|exists:school_classes,id',
+            'next_class_id'   => 'nullable|exists:school_classes,id',
         ]);
 
+        // Assign school_id automatically
         $validated['school_id'] = $user->school_id;
 
         SchoolClass::create($validated);
 
-        return redirect()->route('classes.index')
-                         ->with('success', 'Class created successfully.');
+        return redirect()->route('classes.index')->with('success', 'Class created successfully.');
     }
 
     /**
