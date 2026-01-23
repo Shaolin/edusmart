@@ -11,15 +11,21 @@
 
             {{-- Watermark --}}
             @if($school && $school->logo)
-                <img src="{{ asset('storage/' . $school->logo) }}"
-                     class="absolute top-1/2 left-1/2 w-72 opacity-5 transform -translate-x-1/2 -translate-y-1/2 rotate-12 z-0">
+                {{-- <img src="{{ asset('storage/' . $school->logo) }}"
+                     class="absolute top-1/2 left-1/2 w-72 opacity-5 transform -translate-x-1/2 -translate-y-1/2 rotate-12 z-0"> --}}
+                     <img src="{{ asset('storage/' . rawurlencode($school->logo)) }}"
+     class="absolute top-1/2 left-1/2 w-72 opacity-5 transform -translate-x-1/2 -translate-y-1/2 rotate-12 z-0">
+
             @endif
 
             {{-- Header --}}
             <div class="flex justify-between items-center mb-6 relative z-10">
                 <div class="flex items-center">
                     @if($school && $school->logo)
-                        <img src="{{ asset('storage/' . $school->logo) }}" class="w-20 h-20 object-contain mr-4">
+                        {{-- <img src="{{ asset('storage/' . $school->logo) }}" class="w-20 h-20 object-contain mr-4"> --}}
+                        <img src="{{ asset('storage/' . rawurlencode($school->logo)) }}"
+                        class="w-20 h-20 object-contain mr-4">
+                   
                     @endif
                     <div>
                         <h1 class="text-xl font-bold text-blue-800 dark:text-blue-400">{{ $school->name ?? 'School Name' }}</h1>
