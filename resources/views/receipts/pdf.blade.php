@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="Content-Type" content="utf-8"/>
     <title>Fee Receipt — {{ $student->name }}</title>
     <style>
         body {
@@ -13,15 +13,6 @@
         .header, .footer {
             width: 100%;
             margin-bottom: 20px;
-        }
-
-        .watermark {
-            position: fixed;
-            top: 45%;
-            left: 50%;
-            width: 300px;
-            opacity: 0.05;
-            transform: translate(-50%, -50%) rotate(12deg);
         }
 
         table {
@@ -60,33 +51,15 @@
 </head>
 <body>
 
-{{-- Watermark --}}
-@if($school && $school->logo)
-    <img src="{{ public_path('storage/school_logos/' . $school->logo) }}" class="watermark">
-@endif
-
 {{-- Header --}}
 <table class="header">
     <tr>
         <td style="width: 70%;">
-            <table>
-                <tr>
-                    @if($school && $school->logo)
-                        <td style="width: 90px;">
-                            <img src="{{ public_path('storage/school_logos/' . $school->logo) }}"
-                                 style="width:80px; height:80px; object-fit:contain;">
-                        </td>
-                    @endif
-                    <td>
-                        {{-- School Name in Blue --}}
-                        <div class="title" style="color:#1E40AF;">{{ $school->name ?? 'School Name' }}</div>
-                        <div>{{ $school->address ?? '' }}</div>
-                        <div>Contact: {{ $school->phone ?? $school->contact ?? 'Not set' }}</div>
-                        @if($school->email)<div>Email: {{ $school->email }}</div>@endif
-                        @if($school->website)<div>Website: {{ $school->website }}</div>@endif
-                    </td>
-                </tr>
-            </table>
+            <div class="title" style="color:#1E40AF;">{{ $school->name ?? 'School Name' }}</div>
+            <div>{{ $school->address ?? '' }}</div>
+            <div>Contact: {{ $school->phone ?? $school->contact ?? 'Not set' }}</div>
+            @if($school->email)<div>Email: {{ $school->email }}</div>@endif
+            @if($school->website)<div>Website: {{ $school->website }}</div>@endif
         </td>
         <td class="text-right" style="vertical-align: top;">
             <span class="badge">RECEIPT</span>
@@ -99,7 +72,6 @@
     <div class="title">Student Information</div>
     <table>
         <tr>
-            {{-- Student Name in Purple --}}
             <td><strong>Name:</strong> <span style="color:#7C3AED;">{{ $student->name }}</span></td>
             <td><strong>Class:</strong> {{ $student->schoolClass->name ?? '—' }}</td>
         </tr>
