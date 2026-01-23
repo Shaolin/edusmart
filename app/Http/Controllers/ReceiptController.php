@@ -89,32 +89,35 @@ class ReceiptController extends Controller
      * Generate receipt for a student for a given term and session
      */
     public function view(Request $request)
-    {
-        $this->authorizeAdmin();
+{
+    $this->authorizeAdmin();
 
-        $studentId = $request->query('student');
-        $term      = $request->query('term');
-        $session   = $request->query('session');
+    $studentId = $request->query('student');
+    $term      = $request->query('term');
+    $session   = $request->query('session');
 
-        $student = Student::findOrFail($studentId);
+    $student = Student::findOrFail($studentId);
 
-        if ($student->school_id !== Auth::user()->school_id) {
-            abort(403, 'Unauthorized');
-        }
-
-        $school = School::first(); // adjust for multi-tenant if needed
-
-        $payments = FeePayment::where('student_id', $studentId)
-            ->where('term', $term)
-            ->where('session', $session)
-            ->get();
-
-        $totalPaid = $payments->sum('amount');
-        $totalFees = $payments->sum(fn($p) => $p->fee->amount ?? 0);
-        $balance   = $totalFees - $totalPaid;
-
-        return view('receipts.show', compact(
-            'student', 'school', 'payments', 'term', 'session', 'totalPaid', 'totalFees', 'balance'
-        ));
+    if ($student->school_id !== Auth::user()->school_id) {
+        abort(403, 'Unauthorized');
     }
+
+    $school = $student->school; // ✅ use the student's actual school
+
+    $payments = FeePayment::where('student_id', $studentId)
+        ->where('term', $term)
+        ->where('session', $session)
+        ->get();
+
+    $totalPaid = $payments->sum('amount');
+    $totalFees = $payments->sum(fn($p) => $p->fee->amount ?? 0);
+    $balance   = $totalFees - $totalPaid;
+
+    return view('receipts.show', compact(
+        'student', 'school', 'payments', 'term', 'session', 'totalPaid', 'totalFees', 'balance'
+    ));
+}
+
+       
+      
 }
