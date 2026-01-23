@@ -3,7 +3,6 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Fee Receipt — {{ $student->name }}</title>
-
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;
@@ -63,13 +62,8 @@
 
 {{-- Watermark --}}
 @if($school && $school->logo)
-
-    {{-- <img src="{{ public_path('storage/' . $school->logo) }}" class="watermark"> --}}
-    <img src="{{ public_path('school_logos/' . $school->logo) }}" class="watermark">
-
+    <img src="{{ public_path('storage/school_logos/' . $school->logo) }}" class="watermark">
 @endif
-
-
 
 {{-- Header --}}
 <table class="header">
@@ -79,12 +73,12 @@
                 <tr>
                     @if($school && $school->logo)
                         <td style="width: 90px;">
-                            <img src="{{ public_path('school_logos/' . $school->logo) }}"
+                            <img src="{{ public_path('storage/school_logos/' . $school->logo) }}"
                                  style="width:80px; height:80px; object-fit:contain;">
                         </td>
                     @endif
                     <td>
-                        {{-- School Name with Blue color --}}
+                        {{-- School Name in Blue --}}
                         <div class="title" style="color:#1E40AF;">{{ $school->name ?? 'School Name' }}</div>
                         <div>{{ $school->address ?? '' }}</div>
                         <div>Contact: {{ $school->phone ?? $school->contact ?? 'Not set' }}</div>
@@ -116,7 +110,6 @@
     </table>
 </div>
 
-
 {{-- Payment Table --}}
 <table>
     <thead>
@@ -129,7 +122,6 @@
     </thead>
     <tbody>
         @php $totalPaid = 0; $totalBalance = 0; @endphp
-
         @forelse($payments as $payment)
             @php
                 $totalPaid += $payment->amount;
@@ -139,9 +131,7 @@
                 <td>{{ $payment->fee->name ?? '—' }}</td>
                 <td class="text-green">₦{{ number_format($payment->amount, 2) }}</td>
                 <td class="text-red">₦{{ number_format($payment->balance_after_payment, 2) }}</td>
-                <td>
-                    {{ \Carbon\Carbon::parse($payment->payment_date)->format('d M Y') }}
-                </td>
+                <td>{{ \Carbon\Carbon::parse($payment->payment_date)->format('d M Y') }}</td>
             </tr>
         @empty
             <tr>
