@@ -69,6 +69,8 @@
 
 @endif
 
+
+
 {{-- Header --}}
 <table class="header">
     <tr>
@@ -77,17 +79,13 @@
                 <tr>
                     @if($school && $school->logo)
                         <td style="width: 90px;">
-
-                            {{-- <img src="{{ public_path('storage/' . $school->logo) }}"
-                                 style="width:80px; height:80px; object-fit:contain;"> --}}
-
-                                 <img src="{{ public_path('school_logos/' . $school->logo) }}"
-     style="width:80px; height:80px; object-fit:contain;">
-
+                            <img src="{{ public_path('school_logos/' . $school->logo) }}"
+                                 style="width:80px; height:80px; object-fit:contain;">
                         </td>
                     @endif
                     <td>
-                        <div class="title">{{ $school->name ?? 'School Name' }}</div>
+                        {{-- School Name with Blue color --}}
+                        <div class="title" style="color:#1E40AF;">{{ $school->name ?? 'School Name' }}</div>
                         <div>{{ $school->address ?? '' }}</div>
                         <div>Contact: {{ $school->phone ?? $school->contact ?? 'Not set' }}</div>
                         @if($school->email)<div>Email: {{ $school->email }}</div>@endif
@@ -107,16 +105,17 @@
     <div class="title">Student Information</div>
     <table>
         <tr>
-            <td><strong>Name:</strong> {{ $student->name }}</td>
+            {{-- Student Name in Purple --}}
+            <td><strong>Name:</strong> <span style="color:#7C3AED;">{{ $student->name }}</span></td>
             <td><strong>Class:</strong> {{ $student->schoolClass->name ?? '—' }}</td>
         </tr>
         <tr>
             <td><strong>Session:</strong> {{ $session ?? '—' }}</td>
-<td><strong>Term:</strong> {{ $term ?? '—' }}</td>
-
+            <td><strong>Term:</strong> {{ $term ?? '—' }}</td>
         </tr>
     </table>
 </div>
+
 
 {{-- Payment Table --}}
 <table>
