@@ -63,7 +63,10 @@
 
 {{-- Watermark --}}
 @if($school && $school->logo)
-    <img src="{{ public_path('storage/' . $school->logo) }}" class="watermark">
+
+    {{-- <img src="{{ public_path('storage/' . $school->logo) }}" class="watermark"> --}}
+    <img src="{{ public_path('school_logos/' . $school->logo) }}" class="watermark">
+
 @endif
 
 {{-- Header --}}
@@ -74,8 +77,13 @@
                 <tr>
                     @if($school && $school->logo)
                         <td style="width: 90px;">
-                            <img src="{{ public_path('storage/' . $school->logo) }}"
-                                 style="width:80px; height:80px; object-fit:contain;">
+
+                            {{-- <img src="{{ public_path('storage/' . $school->logo) }}"
+                                 style="width:80px; height:80px; object-fit:contain;"> --}}
+
+                                 <img src="{{ public_path('school_logos/' . $school->logo) }}"
+     style="width:80px; height:80px; object-fit:contain;">
+
                         </td>
                     @endif
                     <td>
