@@ -1,5 +1,6 @@
 <?php
 
+
 namespace App\Http\Controllers\Teacher;
 
 use Carbon\Carbon;
@@ -9,46 +10,82 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
+
 class AttendanceController extends Controller
 {
     /**
      * Show attendance page
      */
-    public function index()
+    
+    
+    public function index(Request $request)
     {
-        $teacher = Auth::user();
-
-        // Get students belonging to the teacher's class
-        $students = Student::where('class_id', $teacher->class_id)
+        $teacher = auth()->user()->teacher;
+    
+        // Teacher’s classes
+        $classIds = $teacher->formClasses()->pluck('id');
+    
+        // Selected date (default = today)
+        $date = $request->date
+            ? Carbon::parse($request->date)->toDateString()
+            : Carbon::today()->toDateString();
+    
+        // Students in teacher’s classes
+        $students = Student::whereIn('class_id', $classIds)
             ->where('school_id', $teacher->school_id)
+            ->orderBy('name')
             ->get();
-
-        $today = Carbon::today()->toDateString();
-
-        return view('teachers.attendance.index', compact('students', 'today'));
+    
+        // Attendance records for that date
+        $attendance = Attendance::whereIn('student_id', $students->pluck('id'))
+            ->where('date', $date)
+            ->get()
+            ->keyBy('student_id');
+    
+        return view('teachers.attendance.index', compact(
+            'students',
+            'attendance',
+            'date'
+        ));
     }
+    
 
     /**
      * Store attendance
      */
     public function store(Request $request)
-{
-    $presentIds = $request->attendance ?? [];
+    {
+        $teacher = auth()->user()->teacher;
+        $today = Carbon::today()->toDateString();
 
-    foreach (Student::all() as $student) {
-        Attendance::updateOrCreate(
-            [
-                'student_id' => $student->id,
-                'date' => now()->toDateString(),
-            ],
-            [
-                'status' => in_array($student->id, $presentIds) ? 'present' : 'absent',
-            ]
-        );
+        // 🔐 Teacher classes
+        $classIds = $teacher->formClasses()->pluck('id');
+
+        // Attendance comes as: [student_id => present|absent]
+        $attendanceData = $request->attendance ?? [];
+
+        foreach ($attendanceData as $studentId => $status) {
+
+            // 🔒 Ensure student belongs to teacher’s class
+            $student = Student::where('id', $studentId)
+                ->whereIn('class_id', $classIds)
+                ->where('school_id', $teacher->school_id)
+                ->firstOrFail();
+
+            Attendance::updateOrCreate(
+                [
+                    'student_id' => $student->id,
+                    'date'       => $today,
+                ],
+                [
+                    'teacher_id' => $teacher->id,
+                    'class_id'   => $student->class_id, // ✅ SAFE
+                    'school_id'  => $teacher->school_id,
+                    'status'     => $status === 'absent' ? 'absent' : 'present',
+                ]
+            );
+        }
+
+        return back()->with('success', 'Attendance saved successfully.');
     }
-
-    return back()->with('success', 'Attendance saved successfully.');
 }
-
-}
-

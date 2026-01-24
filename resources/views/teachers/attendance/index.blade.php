@@ -1,98 +1,123 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <h2 class="font-semibold text-xl sm:text-2xl text-gray-800 dark:text-gray-100">
+        <div class="flex flex-col gap-2">
+            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-100">
                 Class Attendance
             </h2>
 
-            <span class="px-3 py-1 rounded-lg bg-green-100 dark:bg-green-900
-                         text-green-700 dark:text-green-300 text-sm">
-                Total Students: {{ $students->count() }}
-            </span>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+                Tap a student to mark <span class="font-semibold">ABSENT</span>
+            </p>
         </div>
     </x-slot>
 
-    <div class="py-6">
-        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-900 shadow sm:rounded-lg p-4 sm:p-6">
+    {{-- Date selector --}}
+<form method="GET" class="mb-4 px-3">
+    <label
+        class="block mb-1 text-sm font-semibold
+               text-gray-700 dark:text-gray-200">
+        Select date
+    </label>
 
-                {{-- FILTERS --}}
-                <form method="GET" class="mb-5">
-                    <div class="flex flex-col sm:flex-row gap-3">
+    <input
+        type="date"
+        name="date"
+        value="{{ $date }}"
+        class="px-3 py-2 border rounded-lg w-full sm:w-auto
+               bg-white text-gray-900
+               dark:bg-gray-800 dark:text-gray-100
+               border-gray-300 dark:border-gray-600
+               focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        onchange="this.form.submit()"
+    >
+</form>
+
+
+    <div class="py-4">
+        <div class="max-w-3xl mx-auto px-3">
+
+            {{-- success message --}}
+            @if(session('success'))
+                <div class="mb-4 p-3 rounded-lg bg-green-100 text-green-700">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            <form method="POST" action="{{ route('teachers.attendance.store') }}">
+                @csrf
+
+                <p class="mb-3 text-sm text-gray-600">
+                    Students count: {{ $students->count() }}
+                </p>
+
+                <div class="space-y-3">
+                    @foreach($students as $student)
+                        @php
+                            $record = $attendance[$student->id] ?? null;
+                            $isAbsent = $record && $record->status === 'absent';
+                        @endphp
+
+                        {{-- Hidden input (default state) --}}
                         <input
-                            type="text"
-                            name="name"
-                            value="{{ request('name') }}"
-                            placeholder="Search by student name"
-                            class="px-3 py-2 border rounded-lg w-full sm:flex-1
-                                   dark:bg-gray-800 dark:text-gray-100">
+                            type="hidden"
+                            name="attendance[{{ $student->id }}]"
+                            value="{{ $isAbsent ? 'absent' : 'present' }}"
+                        >
 
-                        <input
-                            type="date"
-                            name="date"
-                            value="{{ request('date') }}"
-                            class="px-3 py-2 border rounded-lg w-full sm:w-auto
-                                   dark:bg-gray-800 dark:text-gray-100">
+                        <button
+                            type="button"
+                            onclick="toggleAttendance(this)"
+                            class="attendance-btn w-full flex justify-between items-center
+                                   p-4 rounded-lg border
+                                   {{ $isAbsent ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }}
+                                   active:scale-95 transition">
 
-                        <div class="flex gap-2">
-                            <button type="submit"
-                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                                Filter
-                            </button>
+                            <div class="text-left">
+                                <p class="font-medium">
+                                    {{ $student->name }}
+                                </p>
+                                <p class="text-xs opacity-70">
+                                    {{ $student->admission_number }}
+                                </p>
+                            </div>
 
-                            <a href="{{ route('teachers.attendance.index') }}"
-                               class="px-4 py-2 bg-gray-200 dark:bg-gray-800
-                                      dark:text-gray-100 rounded-lg hover:bg-gray-300">
-                                Reset
-                            </a>
-                        </div>
-                    </div>
-                </form>
-
-                <form method="POST" action="{{ route('teachers.attendance.store') }}">
-                    @csrf
-                
-                    <div class="space-y-3">
-                        @forelse($students as $student)
-                            <label
-                                class="flex items-center justify-between gap-3 p-3
-                                       bg-gray-50 dark:bg-gray-800 rounded-lg
-                                       border border-gray-200 dark:border-gray-700
-                                       hover:bg-gray-100 dark:hover:bg-gray-700">
-                
-                                <div>
-                                    <p class="font-medium text-gray-800 dark:text-gray-100">
-                                        {{ $student->name }}
-                                    </p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">
-                                        Admission No: {{ $student->admission_number }}
-                                    </p>
-                                </div>
-                
-                                <input
-                                    type="checkbox"
-                                    name="attendance[]"
-                                    value="{{ $student->id }}"
-                                    class="w-6 h-6 text-green-600 rounded focus:ring-green-500">
-                            </label>
-                        @empty
-                            <p class="text-center text-gray-500 dark:text-gray-400">
-                                No students found.
-                            </p>
-                        @endforelse
-                    </div>
-                
-                    <div class="mt-6">
-                        <button type="submit"
-                            class="w-full sm:w-auto px-6 py-3 bg-green-600
-                                   text-white rounded-lg hover:bg-green-700">
-                            Submit Attendance
+                            <span class="status font-semibold">
+                                {{ $isAbsent ? 'Absent' : 'Present' }}
+                            </span>
                         </button>
-                    </div>
-                </form>
-                
+                    @endforeach
+                </div>
 
-            </div>
+                <button
+                    type="submit"
+                    class="w-full mt-6 py-3 rounded-lg
+                           bg-blue-600 text-white text-lg
+                           hover:bg-blue-700">
+                    Save Attendance
+                </button>
+            </form>
         </div>
     </div>
+
+    {{-- tiny JS --}}
+    <script>
+        function toggleAttendance(button) {
+            const input = button.previousElementSibling;
+            const status = button.querySelector('.status');
+
+            if (!input) return;
+
+            if (input.value === 'present') {
+                input.value = 'absent';
+                status.textContent = 'Absent';
+                button.classList.remove('bg-green-100', 'text-green-800');
+                button.classList.add('bg-red-100', 'text-red-800');
+            } else {
+                input.value = 'present';
+                status.textContent = 'Present';
+                button.classList.remove('bg-red-100', 'text-red-800');
+                button.classList.add('bg-green-100', 'text-green-800');
+            }
+        }
+    </script>
 </x-app-layout>
