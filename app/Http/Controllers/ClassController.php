@@ -7,6 +7,7 @@ use App\Models\Student;
 use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class ClassController extends Controller
 {
@@ -155,12 +156,23 @@ class ClassController extends Controller
 
         $user = Auth::user();
         $validated = $request->validate([
-            'name'            => 'required|string|max:255|unique:classes,name',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('classes')->where(function ($query) use ($user, $request) {
+                    return $query->where('school_id', $user->school_id)
+                                 ->where('section', $request->section);
+                }),
+            ],
+        
             'section'         => 'nullable|string|max:255',
             'form_teacher_id' => 'nullable|exists:teachers,id',
-            'next_class_id'   => 'nullable|exists:school_classes,id',
-        ]);
+            
+            'next_class_id' => 'nullable|exists:classes,id',
 
+        ]);
+        
         // Assign school_id automatically
         $validated['school_id'] = $user->school_id;
 
@@ -191,18 +203,39 @@ class ClassController extends Controller
     public function update(Request $request, SchoolClass $class)
     {
         $this->authorizeAdmin();
-
+    
+        $user = Auth::user();
+    
         $validated = $request->validate([
-            'name'            => 'required|string|max:255|unique:classes,name,' . $class->id,
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('classes')
+                    ->where(function ($query) use ($user, $request) {
+                        return $query->where('school_id', $user->school_id)
+                                     ->where('section', $request->section);
+                    })
+                    ->ignore($class->id),
+            ],
+    
             'section'         => 'nullable|string|max:255',
             'form_teacher_id' => 'nullable|exists:teachers,id',
-            'next_class_id'   => ['nullable','exists:classes,id','not_in:'.$class->id],
+    
+            'next_class_id' => [
+                'nullable',
+                'exists:classes,id',
+                'not_in:' . $class->id
+            ],
         ]);
-
+    
         $class->update($validated);
-
-        return redirect()->route('classes.index')->with('success', 'Class updated successfully.');
+    
+        return redirect()
+            ->route('classes.index')
+            ->with('success', 'Class updated successfully.');
     }
+    
 
     /**
      * Delete (Admin only)
