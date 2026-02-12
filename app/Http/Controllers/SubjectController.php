@@ -70,10 +70,12 @@ class SubjectController extends Controller
             ],
             'level' => 'required|in:Nursery,Primary,JSS,SSS',
         ]);
-
+        
+        $validated['name'] = trim($validated['name']);   // 🔥 FIX
         $validated['school_id'] = $user->school_id;
-
+        
         Subject::create($validated);
+        
 
         return redirect()
             ->route('subjects.index')
@@ -116,10 +118,12 @@ class SubjectController extends Controller
             ],
             'level' => 'required|in:Nursery,Primary,JSS,SSS',
         ]);
-
+        
+        $validated['name'] = trim($validated['name']);   // 🔥 FIX
         $validated['school_id'] = auth()->user()->school_id;
-
+        
         $subject->update($validated);
+        
 
         return redirect()
             ->route('subjects.index')
