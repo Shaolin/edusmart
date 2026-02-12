@@ -74,7 +74,7 @@ class SubjectController extends Controller
         $validated['name'] = trim($validated['name']);   // 🔥 FIX
         $validated['school_id'] = $user->school_id;
 
-        dd($user->school_id);
+        
 
         
         Subject::create($validated);
