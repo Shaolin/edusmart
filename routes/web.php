@@ -74,6 +74,22 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('admin')
         ->name('students.store');
 
+        //    create students from whatsapp list
+
+
+    
+
+   
+    Route::get('/students/bulk-create', [StudentController::class, 'bulkCreate'])
+    ->name('students.bulkCreate');
+
+Route::post('/students/bulk-store', [StudentController::class, 'bulkStore'])
+    ->name('students.bulkStore');
+
+    Route::get('/students/bulk', [StudentController::class, 'bulk'])
+    ->name('students.bulk');
+
+
     Route::get('students/{student}', [StudentController::class, 'show'])->name('students.show');
     Route::get('students/{student}/edit', [StudentController::class, 'edit'])
         ->middleware('admin')

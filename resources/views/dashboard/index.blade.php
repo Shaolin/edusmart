@@ -46,6 +46,8 @@
     ['name' => 'Assigned Subjects', 'route' => 'class_subject_teacher.index', 'count' => 'Manage', 'color' => 'teal'], // ✅ new card
     ['name' => 'Sessions', 'route' => 'sessions.index', 'count' => 'Manage', 'color' => 'indigo'],
     ['name' => 'Terms', 'route' => 'terms.index', 'count' => 'Manage', 'color' => 'orange'],
+    ['name' => 'Bulk Students', 'route' => 'students.bulkCreate', 'count' => 'Import', 'color' => 'green'],
+
 ];
 
         @endphp

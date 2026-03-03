@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Student;
 use App\Models\Subject;
+use App\Models\Guardian;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class SubjectController extends Controller
 {
@@ -149,4 +153,9 @@ class SubjectController extends Controller
             ->route('subjects.index')
             ->with('success', 'Subject deleted successfully.');
     }
+
+
+
+
+
 }

@@ -24,6 +24,9 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\FeePayment;
 use App\Models\StudentFee;
 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+
 
    
 
@@ -482,12 +485,163 @@ public function sendReceiptWhatsapp($studentId)
 
 
 
+// whatsapp student list
+public function bulk()
+{
+    $classes = SchoolClass::orderBy('name')->get();
 
- 
+    return view('students.bulk', compact('classes'));
+}
+
+
+
+
+
+public function bulkCreate()
+{
+    $classes = SchoolClass::where('school_id', Auth::user()->school_id)
+        ->orderBy('name')
+        ->get();
+
+    return view('students.bulk-create', compact('classes'));
+}
+
+private function getNextAdmissionNumber($schoolId)
+{
+    $lastAdmission = Student::where('school_id', $schoolId)
+        ->max('admission_number');
+
+    return $lastAdmission ? ((int)$lastAdmission + 1) : 1;
+}
+
 
 
   
+public function bulkStore(Request $request)
+{
+    $user = Auth::user();
 
+    $request->validate([
+        'bulk_data' => 'required|string',
+        'class_id'  => 'required|exists:classes,id'
+    ]);
+
+    $lines = explode("\n", $request->bulk_data);
+
+    $studentsToInsert = [];
+    $errors = [];
+
+    DB::beginTransaction();
+
+    try {
+
+        // ✅ Get starting admission number ONCE
+        $nextAdmissionNumber = $this->getNextAdmissionNumber($user->school_id);
+
+        foreach ($lines as $index => $line) {
+
+            $lineNumber = $index + 1;
+            $line = trim($line);
+        
+            if (empty($line)) continue;
+        
+            // ✅ Remove numbering (1. 1) 1- etc)
+            $line = preg_replace('/^\d+[\.\-\)]\s*/', '', $line);
+        
+            // ✅ Normalize spacing
+            $line = preg_replace('/\s+/', ' ', $line);
+        
+            // ✅ Extract phone number (last number in line)
+            preg_match('/(0\d{10})$/', $line, $phoneMatch);
+        
+            if (!$phoneMatch) {
+                $errors[] = "Line {$lineNumber}: Phone not found";
+                continue;
+            }
+        
+            $phone = $phoneMatch[1];
+        
+            // ✅ Remove phone from line
+            $lineWithoutPhone = trim(str_replace($phone, '', $line));
+        
+            // ✅ Extract gender
+            preg_match('/\b(Male|Female)\b/i', $lineWithoutPhone, $genderMatch);
+        
+            if (!$genderMatch) {
+                $errors[] = "Line {$lineNumber}: Gender not found";
+                continue;
+            }
+        
+            $gender = ucfirst(strtolower($genderMatch[1]));
+        
+            // ✅ Split using gender
+            [$studentName, $guardianName] = preg_split(
+                '/\b(Male|Female)\b/i',
+                $lineWithoutPhone
+            );
+        
+            $studentName = trim($studentName);
+            $guardianName = trim($guardianName);
+        
+            if (!$studentName || !$guardianName) {
+                $errors[] = "Line {$lineNumber}: Invalid name structure";
+                continue;
+            }
+        
+            // ✅ Guardian
+            $guardian = Guardian::firstOrCreate(
+                [
+                    'phone' => $phone,
+                    'school_id' => $user->school_id
+                ],
+                [
+                    'name' => $guardianName
+                ]
+            );
+        
+            // ✅ Duplicate check
+            $studentExists = Student::where('name', $studentName)
+                ->where('guardian_id', $guardian->id)
+                ->where('class_id', $request->class_id)
+                ->exists();
+        
+            if ($studentExists) {
+                $errors[] = "Line {$lineNumber}: Student already exists";
+                continue;
+            }
+        
+            $studentsToInsert[] = [
+                'name' => $studentName,
+                'gender' => strtolower($gender),
+                'guardian_id' => $guardian->id,
+                'class_id' => $request->class_id,
+                'school_id' => $user->school_id,
+                'admission_number' => str_pad($nextAdmissionNumber++, 3, '0', STR_PAD_LEFT),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+        
+
+        if (!empty($studentsToInsert)) {
+            Student::insert($studentsToInsert);
+        }
+
+        DB::commit();
+
+    } catch (\Exception $e) {
+
+        DB::rollBack();
+        throw $e;
+    }
+
+    return redirect()
+        ->back()
+        ->with('success', 'Bulk import completed')
+        
+        ->with('importErrors', $errors);
+
+}
 
    
    
