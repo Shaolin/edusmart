@@ -100,10 +100,15 @@
                                 <span class="font-medium text-gray-800 dark:text-gray-100">{{ $student->schoolClass->name ?? '-' }}</span>
                             </div>
                             <div class="flex gap-3 mt-2">
-                                <a href="{{ route('teachers.results.edit', $student->id) }}"
+                                {{-- <a href="{{ route('teachers.results.edit', $student->id) }}"
                                    class="text-blue-600 hover:underline text-sm">
                                     Manage Results
-                                </a>
+                                </a> --}}
+                                <a href="{{ route('teachers.results.create', $student->id) }}"
+                                        
+                                    class="text-blue-600 hover:underline">
+                                     Create Results
+                                 </a>
                                 <a href="{{ route('teachers.results.show', $student->id) }}"
                                    class="text-green-600 hover:underline text-sm">
                                     View Result
