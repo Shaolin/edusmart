@@ -114,10 +114,19 @@
        
         <div class="mt-6 flex flex-col sm:flex-row sm:flex-wrap gap-3 no-print">
 
-            <a href="{{ route('teachers.results.edit', $student->id) }}?session={{ request('session') }}&term={{ request('term') }}"
+            {{-- <a href="{{ route('teachers.results.edit', $student->id) }}?session={{ request('session') }}&term={{ request('term') }}"
                class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-center flex-1 sm:flex-none">
                 ✏️ Edit Results
-            </a>
+            </a> --}}
+
+            <a href="{{ route('teachers.results.edit', [
+    'student' => $student->id,
+    'session_id' => request('session_id'),
+    'term_id' => request('term_id')
+]) }}"
+class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-center flex-1 sm:flex-none">
+    ✏️ Edit Results
+</a>
         
             <a href="{{ route('teachers.results.download', [$student->id, 'session' => request('session'), 'term' => request('term')]) }}"
                class="px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white rounded text-center flex-1 sm:flex-none">

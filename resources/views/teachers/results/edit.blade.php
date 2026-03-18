@@ -6,6 +6,27 @@
     </x-slot>
 
     <div class="p-6">
+        {{-- Success & Error Messages --}}
+        @if (session('success'))
+            <div class="mb-4 p-4 rounded-lg bg-green-100 text-green-800 border border-green-300 text-sm font-medium">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if (session('error'))
+            <div class="mb-4 p-4 rounded-lg bg-red-100 text-red-800 border border-red-300 text-sm font-medium">
+                {{ session('error') }}
+            </div>
+        @endif
+        @if ($errors->any())
+            <div class="mb-4 p-4 rounded-lg bg-red-100 text-red-800 border border-red-300 text-sm font-medium">
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <form action="{{ route('teachers.results.update', $student->id) }}" method="POST">
             @csrf
             @method('PUT')

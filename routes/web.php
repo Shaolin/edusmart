@@ -337,10 +337,15 @@ Route::prefix('teacher')->middleware(['auth'])->group(function () {
 
     // Save result entries
     Route::put('students/{student}/results', [TeacherResultController::class, 'update'])->name('teachers.results.update');
-       
+    //Create
+    Route::get('/teacher/results/{student}/create', [TeacherResultController::class, 'create'])
+    ->name('teachers.results.create');
      // View Result 
     Route::get('/teacher/results/{student}/view', [TeacherResultController::class, 'show'])
      ->name('teachers.results.show');
+//     Route::get('/teachers/results/{student_id}/{term_id}/{session_id}', 
+//     [TeacherResultController::class, 'show']
+// )->name('teachers.results.show');
          // Student  Result 
      Route::get('/teacher/results/{student}/report', [TeacherResultController::class, 'report'])
     ->name('teachers.results.report');

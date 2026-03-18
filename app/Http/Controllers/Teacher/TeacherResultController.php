@@ -36,6 +36,21 @@ class TeacherResultController extends Controller
             'totalStudents' => $students->total(),
         ]);
     }
+    // Create result
+    public function create(Request $request, Student $student)
+{
+    $sessions = AcademicSession::all();
+    $terms = Term::all();
+
+    $sessionId = $request->session_id ?? AcademicSession::where('is_active', 1)->value('id');
+    $termId    = $request->term_id ?? Term::where('is_active', 1)->value('id');
+
+    $subjects = $student->schoolClass->subjects;
+
+    return view('teachers.results.create', compact(
+        'student', 'sessions', 'terms', 'subjects', 'sessionId', 'termId'
+    ));
+}
 
     // Show form for entering a single student's results
     public function edit(Student $student, Request $request)
@@ -48,8 +63,10 @@ class TeacherResultController extends Controller
 
         $sessions = AcademicSession::all();
         $terms = Term::all();
-        $sessionId = $request->session ?? $sessions->first()->id;
-        $termId = $request->term ?? $terms->first()->id;
+        // $sessionId = $request->session ?? $sessions->first()->id;
+        // $termId = $request->term ?? $terms->first()->id;
+        $sessionId = $request->query('session_id') ?? $sessions->first()->id;
+$termId    = $request->query('term_id') ?? $terms->first()->id;
 
         $subjects = $student->schoolClass->subjects()->get();
 
@@ -78,6 +95,7 @@ class TeacherResultController extends Controller
         
 
         $data = $request->validate([
+            
             'session_id'   => 'required|exists:sessions,id',
             'term_id'      => 'required|exists:terms,id',
             'subject_id.*' => 'required|exists:subjects,id',
@@ -127,13 +145,20 @@ class TeacherResultController extends Controller
             $message .= ' ⚠️ Some subjects were not saved: ' . implode(', ', $incompleteSubjects);
         }
 
-        return redirect()
-            ->route('teachers.results.show', $student->id)
-            ->with([
-                'success' => $message,
-                'session' => $data['session_id'],
-                'term'    => $data['term_id']
-            ]);
+        // return redirect()
+        //     ->route('teachers.results.show', $student->id)
+        //     ->with([
+        //         'success' => $message,
+        //         'session' => $data['session_id'],
+        //         'term'    => $data['term_id']
+        //     ]);
+
+            return redirect()->route('teachers.results.show', [
+                'student'    => $student->id,
+                'session_id' => $data['session_id'],
+                'term_id'    => $data['term_id'],
+            ])->with('success', $message);
+   
     }
 
     private function computeGrade($total)
@@ -149,11 +174,21 @@ class TeacherResultController extends Controller
     // Show student results with correct ranking
     public function show(Request $request, Student $student)
     {
-        $sessionId = $request->query('session_id') ?? AcademicSession::latest()->first()->id;
-        $termId    = $request->query('term_id') ?? Term::latest()->first()->id;
+
+    
+       
+        $sessionId = $request->session_id 
+    ?? AcademicSession::where('is_active', 1)->value('id');
+
+$termId = $request->term_id 
+    ?? Term::where('is_active', 1)->value('id');
+//         $sessionId = $request->session_id ?? $request->session ?? AcademicSession::latest()->first()->id;
+// $termId    = $request->term_id ?? $request->term ?? Term::latest()->first()->id;
 
         $session = AcademicSession::find($sessionId);
         $term    = Term::find($termId);
+
+        
 
         $results = Result::with('subject')
             ->where('student_id', $student->id)

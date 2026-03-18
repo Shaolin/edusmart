@@ -34,6 +34,8 @@
         <form action="{{ route('teachers.results.store', $student->id) }}" method="POST">
             @csrf
             <input type="hidden" name="student_id" value="{{ $student->id }}">
+            <input type="hidden" name="session_id" value="{{ request('session_id') }}">
+<input type="hidden" name="term_id" value="{{ request('term_id') }}">
 
             {{-- 🔹 Session & Term --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">

@@ -50,11 +50,23 @@
                                 <td class="px-4 py-2 text-sm sm:text-base">{{ $student->admission_number }}</td>
                                 <td class="px-4 py-2 text-sm sm:text-base">{{ $student->schoolClass->name ?? '-' }}</td>
                                 <td class="px-4 py-2 flex flex-col sm:flex-row gap-2 sm:gap-4 text-sm sm:text-base">
-                                    <a href="{{ route('teachers.results.edit', $student->id) }}"
+                                    <a href="{{ route('teachers.results.create', $student->id) }}"
+                                        
                                        class="text-blue-600 hover:underline">
-                                        Manage Results
+                                        Create Results
                                     </a>
+{{-- 
+                                    <a href="{{ route('teachers.results.create', [
+    'student' => $student->id,
+    'session_id' => request('session_id'),
+    'term_id' => request('term_id')
+]) }}" class="text-blue-600 hover:underline">
+    Create Results
+</a> --}}
+
                                     <a href="{{ route('teachers.results.show', $student->id) }}"
+      
+                                        
                                        class="text-green-600 hover:underline">
                                         View Result
                                     </a>

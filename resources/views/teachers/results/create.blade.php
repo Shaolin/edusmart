@@ -13,8 +13,10 @@
             </div>
         @endif
 
-        <form action="{{ route('results.update', $student->id) }}" method="POST">
+        {{-- <form action="{{ route('results.update', $student->id) }}" method="POST"> --}}
+            <form action="{{ route('teachers.results.update', $student->id) }}" method="POST">
             @csrf
+            @method('PUT')
 
             <!-- Session & Term -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
@@ -22,7 +24,10 @@
                     <label class="block font-semibold mb-2">Session</label>
                     <select name="session_id" class="w-full border rounded-lg p-3 dark:bg-gray-800 dark:text-gray-100">
                         @foreach($sessions as $session)
-                            <option value="{{ $session->id }}">{{ $session->name }}</option>
+                            {{-- <option value="{{ $session->id }}">{{ $session->name }}</option> --}}
+                            <option value="{{ $session->id }}" {{ $session->id == $sessionId ? 'selected' : '' }}>
+                                {{ $session->name }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -30,7 +35,10 @@
                     <label class="block font-semibold mb-2">Term</label>
                     <select name="term_id" class="w-full border rounded-lg p-3 dark:bg-gray-800 dark:text-gray-100">
                         @foreach($terms as $term)
-                            <option value="{{ $term->id }}">{{ $term->name }}</option>
+                            {{-- <option value="{{ $term->id }}">{{ $term->name }}</option> --}}
+                            <option value="{{ $term->id }}" {{ $term->id == $termId ? 'selected' : '' }}>
+                                {{ $term->name }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -53,10 +61,15 @@
                                     <input type="hidden" name="subject_id[]" value="{{ $subject->id }}">
                                 </td>
                                 <td class="px-4 py-3">
-                                    <input type="number" name="test_score[]" max="40" class="w-28 border rounded-lg p-2 dark:bg-gray-700 dark:text-gray-100">
+                                    {{-- <input type="number" name="test_score[]" max="40" class="w-28 border rounded-lg p-2 dark:bg-gray-700 dark:text-gray-100"> --}}
+
+                                    <input type="number" name="test_score[]" max="40" class="w-28 border rounded-lg p-2 dark:bg-gray-700 dark:text-gray-100"
+    value="{{ $result->test_score ?? '' }}">
                                 </td>
                                 <td class="px-4 py-3">
-                                    <input type="number" name="exam_score[]" max="60" class="w-28 border rounded-lg p-2 dark:bg-gray-700 dark:text-gray-100">
+                                    {{-- <input type="number" name="exam_score[]" max="60" class="w-28 border rounded-lg p-2 dark:bg-gray-700 dark:text-gray-100"> --}}
+                                    <input type="number" name="exam_score[]" max="60" class="w-28 border rounded-lg p-2 dark:bg-gray-700 dark:text-gray-100"
+    value="{{ $result->exam_score ?? '' }}">
                                 </td>
                             </tr>
                         @endforeach
