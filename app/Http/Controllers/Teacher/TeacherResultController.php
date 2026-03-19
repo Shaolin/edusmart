@@ -111,7 +111,9 @@ $termId    = $request->query('term_id') ?? $terms->first()->id;
             $test = $data['test_score'][$i] ?? null;
             $exam = $data['exam_score'][$i] ?? null;
 
-            if ($test === null || $exam === null || $test === '' || $exam === '') {
+            
+            
+            if (($test === null || $test === '') && ($exam === null || $exam === '')) {
                 $subject = Subject::find($subjectId);
                 $incompleteSubjects[] = $subject ? $subject->name : "Subject #$subjectId";
                 continue;
@@ -145,13 +147,7 @@ $termId    = $request->query('term_id') ?? $terms->first()->id;
             $message .= ' ⚠️ Some subjects were not saved: ' . implode(', ', $incompleteSubjects);
         }
 
-        // return redirect()
-        //     ->route('teachers.results.show', $student->id)
-        //     ->with([
-        //         'success' => $message,
-        //         'session' => $data['session_id'],
-        //         'term'    => $data['term_id']
-        //     ]);
+        
 
             return redirect()->route('teachers.results.show', [
                 'student'    => $student->id,

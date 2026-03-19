@@ -1,172 +1,111 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="text-2xl font-bold">
-            ✏️ Edit Results — {{ $student->name }} ({{ $student->schoolClass->name }})
-        </h2>
-        <p class="text-gray-500 mt-1">
-            Term: {{ $term->name }} | Session: {{ $session->name }}
-        </p>
+        <div class="flex flex-col gap-1">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                ✏️ Edit Results
+            </h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+                {{ $student->name }} • {{ $student->schoolClass->name }}  
+                <span class="mx-2">|</span>
+                {{ $term->name }} • {{ $session->name }}
+            </p>
+        </div>
     </x-slot>
 
-    <div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
+    <div class="max-w-7xl mx-auto mt-6 p-6">
 
-        {{-- ✅ Flash Messages --}}
+        {{-- Alerts --}}
         @if (session('success'))
-            <div class="mb-4 p-3 rounded-lg bg-green-100 text-green-800 border border-green-300">
+            <div class="mb-4 p-4 rounded-xl bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/40 dark:text-green-200 dark:border-green-700 shadow-sm">
                 {{ session('success') }}
             </div>
         @endif
 
-        @if (session('warning'))
-            <div class="mb-4 p-3 rounded-lg bg-yellow-100 text-yellow-900 border border-yellow-300">
-                {{ session('warning') }}
-            </div>
-        @endif
+        {{-- Main Card --}}
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6">
 
-        @if ($errors->any())
-            <div class="mb-4 p-3 rounded-lg bg-red-100 text-red-800 border border-red-300">
-                <ul class="list-disc list-inside">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+            <form id="editResultForm" method="POST" action="{{ route('results.update', $student->id) }}">
+                @csrf
+                @method('PUT')
 
-        {{-- ✅ Update route instead of storeResult --}}
-        <form id="editResultForm" 
-              action="{{ route('results.update', $student->id) }}" 
-              method="POST">
-            @csrf
-            @method('PUT')
+                <input type="hidden" name="term_id" value="{{ $term->id }}">
+                <input type="hidden" name="session_id" value="{{ $session->id }}">
 
-            <input type="hidden" name="term_id" value="{{ $term->id }}">
-            <input type="hidden" name="session_id" value="{{ $session->id }}">
+                {{-- Table --}}
+                <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+                            <tr>
+                                <th class="px-4 py-3 text-left font-semibold">Subject</th>
+                                <th class="px-4 py-3 text-left font-semibold">Test</th>
+                                <th class="px-4 py-3 text-left font-semibold">Exam</th>
+                            </tr>
+                        </thead>
 
-            {{-- 🔹 Subjects Table --}}
-            <table class="min-w-full bg-gray-50 rounded-lg shadow-sm mb-4">
-                <thead>
-                    <tr class="bg-gray-200 text-gray-800 dark:text-gray-100">
-                        <th class="px-4 py-2 text-left">Subject</th>
-                        <th class="px-4 py-2 text-left">Test (40)</th>
-                        <th class="px-4 py-2 text-left">Exam (60)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($subjects as $index => $subject)
-                        @php
-                            // Find existing result for this subject
-                            $existing = $results->firstWhere('subject_id', $subject->id);
-                            $test = $existing->test_score ?? '';
-                            $exam = $existing->exam_score ?? '';
-                            $missing = ($test === '' || $exam === '');
-                        @endphp
-                        <tr class="{{ $missing ? 'bg-yellow-50 dark:bg-yellow-900/30' : '' }}">
-                            <td class="px-4 py-2 font-medium text-gray-800 dark:text-gray-100">
-                                {{ $subject->name }}
-                                <input type="hidden" name="subject_id[]" value="{{ $subject->id }}">
-                            </td>
-                            <td class="px-4 py-2">
-                                <input type="number"
-                                       name="test_score[]"
-                                       max="40"
-                                       class="score-input w-24 border-gray-300 rounded-lg {{ $missing ? 'border-yellow-400' : '' }}"
-                                       value="{{ old('test_score.' . $index, $test) }}">
-                            </td>
-                            <td class="px-4 py-2">
-                                <input type="number"
-                                       name="exam_score[]"
-                                       max="60"
-                                       class="score-input w-24 border-gray-300 rounded-lg {{ $missing ? 'border-yellow-400' : '' }}"
-                                       value="{{ old('exam_score.' . $index, $exam) }}">
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                            @foreach($subjects as $index => $subject)
+                                @php
+                                    $existing = $results->firstWhere('subject_id', $subject->id);
+                                    $test = $existing->test_score ?? '';
+                                    $exam = $existing->exam_score ?? '';
+                                    $missing = ($test === '' || $exam === '');
+                                @endphp
 
-            {{-- Teacher's General Remark --}}
-<div class="mt-4">
-    <label for="teacher_remark" class="block font-semibold text-gray-700 dark:text-gray-200 mb-1">Teacher's Remark</label>
-    <textarea name="teacher_remark" id="teacher_remark" rows="3"
-        class="w-full border border-gray-300 dark:border-gray-700 rounded p-2 focus:outline-none focus:ring focus:ring-blue-300 dark:bg-gray-900 dark:text-gray-100"
-        placeholder="Enter a general remark about the student's performance or behaviour">{{ old('teacher_remark', $results->first()->teacher_remark ?? '') }}</textarea>
-</div>
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                                    <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
+                                        {{ $subject->name }}
+                                        <input type="hidden" name="subject_id[]" value="{{ $subject->id }}">
+                                    </td>
 
+                                    <td class="px-4 py-3">
+                                        <input type="number"
+                                            name="test_score[]"
+                                            max="40"
+                                            value="{{ old('test_score.' . $index, $test) }}"
+                                            class="w-24 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-gray-100 
+                                            focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition
+                                            {{ $missing ? 'border-yellow-400' : '' }}">
+                                    </td>
 
-            <button type="submit"
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-                💾 Update Results
-            </button>
-        </form>
-    </div>
+                                    <td class="px-4 py-3">
+                                        <input type="number"
+                                            name="exam_score[]"
+                                            max="60"
+                                            value="{{ old('exam_score.' . $index, $exam) }}"
+                                            class="w-24 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-gray-100 
+                                            focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition
+                                            {{ $missing ? 'border-yellow-400' : '' }}">
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
 
-    {{-- ⚡ Confirmation + Highlight Script --}}
-    <script>
-        const form = document.getElementById('editResultForm');
-        const testInputs = document.querySelectorAll('input[name^="test_score"]');
-        const examInputs = document.querySelectorAll('input[name^="exam_score"]');
-        const subjectLabels = document.querySelectorAll('tbody td:first-child');
-        let allowSubmit = false;
+                {{-- Remark --}}
+                <div class="mt-6">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                        Teacher's Remark
+                    </label>
+                    <textarea name="teacher_remark" rows="3"
+                        class="w-full px-4 py-3 text-sm rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-gray-100
+                        focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                        placeholder="Write a short performance summary...">{{ old('teacher_remark', $results->first()->teacher_remark ?? '') }}</textarea>
+                </div>
 
-        const topAlert = document.createElement('div');
-        topAlert.id = 'topAlert';
-        topAlert.className =
-            'fixed top-0 left-0 right-0 z-50 bg-yellow-100 text-yellow-900 border-b border-yellow-400 shadow-md p-4 hidden transition-all duration-300';
-        topAlert.innerHTML = `
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-                <span id="alertMessage" class="flex-1"></span>
-                <div class="flex gap-2 mt-2 md:mt-0">
-                    <button id="proceedSave"
-                            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-sm">
-                        ✅ Yes, Save Anyway
-                    </button>
-                    <button id="cancelAlert"
-                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-1 rounded-lg text-sm">
-                        ❌ Cancel
+                {{-- Actions --}}
+                <div class="mt-6 flex justify-between items-center">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                        Tip: Fill all scores to avoid warnings
+                    </p>
+
+                    <button type="submit"
+                        class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transition">
+                        💾 Update Results
                     </button>
                 </div>
-            </div>
-        `;
-        document.body.prepend(topAlert);
 
-        const proceedBtn = document.getElementById('proceedSave');
-        const cancelBtn = document.getElementById('cancelAlert');
-
-        cancelBtn.addEventListener('click', () => {
-            topAlert.classList.add('hidden');
-            allowSubmit = false;
-        });
-
-        proceedBtn.addEventListener('click', () => {
-            allowSubmit = true;
-            topAlert.classList.add('hidden');
-            form.submit();
-        });
-
-        form.addEventListener('submit', function (e) {
-            if (allowSubmit) return;
-            e.preventDefault();
-
-            let missing = [];
-            testInputs.forEach((test, i) => {
-                const exam = examInputs[i];
-                const subjectName = subjectLabels[i].innerText.trim();
-                if (!test.value || !exam.value) missing.push(subjectName);
-            });
-
-            if (missing.length > 0) {
-                document.getElementById('alertMessage').innerHTML = `
-                    ⚠️ Some subjects are still missing scores:<br>
-                    <strong>${missing.join(', ')}</strong><br><br>
-                    Do you still want to save the filled ones?
-                `;
-                topAlert.classList.remove('hidden');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            } else {
-                allowSubmit = true;
-                form.submit();
-            }
-        });
-    </script>
+            </form>
+        </div>
+    </div>
 </x-app-layout>
