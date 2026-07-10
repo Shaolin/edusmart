@@ -75,6 +75,54 @@
             </div>
         </div>
 
+       {{-- Attendance Summary --}}
+<div class="mb-6 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 p-4 relative z-10">
+
+    <h3 class="font-bold text-blue-700 dark:text-blue-400 uppercase border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
+        Attendance Summary
+    </h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-gray-800 dark:text-gray-100">
+
+        {{-- Time School Opened --}}
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4 text-center shadow-sm">
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                Time School Opened
+            </p>
+
+            <p class="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-400">
+                {{ $attendanceSummary->school_opened ?? '—' }}
+            </p>
+        </div>
+
+        {{-- Times Present --}}
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4 text-center shadow-sm">
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                Times Present
+            </p>
+
+            <p class="mt-2 text-3xl font-bold text-green-600 dark:text-green-400">
+                {{ $attendanceSummary->times_present ?? '—' }}
+            </p>
+        </div>
+
+        {{-- Times Absent --}}
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4 text-center shadow-sm">
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                Times Absent
+            </p>
+
+            <p class="mt-2 text-3xl font-bold text-red-600 dark:text-red-400">
+                {{ $attendanceSummary->times_absent ?? '—' }}
+            </p>
+        </div>
+
+    </div>
+
+</div>
+
+{{-- Results Table --}}
+
         {{-- Results Table --}}
         <div class="overflow-x-auto relative z-10 rounded-lg mb-6">
             <table class="min-w-full border border-gray-300 dark:border-gray-700 text-xs sm:text-sm">
@@ -103,12 +151,79 @@
             </table>
         </div>
 
+           {{-- Next Term School Fees --}}
+<div class="mt-6 border rounded-lg border-gray-300 dark:border-gray-700 p-4">
+
+    <h3 class="font-bold text-blue-700 dark:text-blue-400 mb-3 uppercase">
+        Next Term School Fees
+    </h3>
+
+    @if($nextTermFee)
+
+        <div class="space-y-2 text-sm text-gray-800 dark:text-gray-100">
+
+            <p>
+                <strong>Term:</strong>
+
+                @switch($nextTermFee->term)
+                    @case('first')
+                        First Term
+                        @break
+
+                    @case('second')
+                        Second Term
+                        @break
+
+                    @case('third')
+                        Third Term
+                        @break
+
+                    @default
+                        {{ ucfirst($nextTermFee->term) }}
+                @endswitch
+            </p>
+
+            <p>
+                <strong>Session:</strong>
+                {{ $nextTermFee->session }}
+            </p>
+
+            <p class="text-lg font-bold text-green-600 dark:text-green-400">
+                ₦{{ number_format($nextTermFee->amount, 2) }}
+            </p>
+
+        </div>
+
+    @else
+
+        <p class="text-red-600 dark:text-red-400">
+            Next term school fees have not been published yet.
+        </p>
+
+    @endif
+
+</div>
+
         {{-- Teacher Remark --}}
         @if($results->first() && $results->first()->teacher_remark)
             <div class="mt-5 p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-100">
                 <strong>Teacher's Remark:</strong> {{ $results->first()->teacher_remark }}
             </div>
         @endif
+
+        {{-- Next term begins --}}
+
+        @if($setting && $setting->next_term_begins)
+    <div class="mt-6 border-t border-gray-300 dark:border-gray-700 pt-4">
+        <p class="font-bold text-blue-700 dark:text-blue-400 uppercase">
+            NEXT TERM BEGINS
+        </p>
+
+        <p class="text-lg font-semibold text-gray-900 dark:text-white">
+            {{ $setting->next_term_begins->format('d F, Y') }}
+        </p>
+    </div>
+@endif
 
         {{-- Action Buttons --}}
        

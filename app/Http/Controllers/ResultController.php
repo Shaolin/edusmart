@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Term;
+use App\Models\AcademicSession;
+use App\Models\Fee;
 use App\Models\Result;
 use App\Models\School;
+use App\Models\SchoolClass;
+use App\Models\SchoolSetting;
 use App\Models\Student;
 use App\Models\Subject;
-use App\Models\SchoolClass;
+use App\Models\Term;
 use Illuminate\Http\Request;
-use App\Models\AcademicSession;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ResultController extends Controller
 {
@@ -256,7 +259,35 @@ class ResultController extends Controller
         $term = Term::findOrFail($term_id);
         $session = AcademicSession::findOrFail($session_id);
         $school = School::find(Auth::user()->school_id);
+        // $setting = SchoolSetting::where('school_id', $school->id)->first();
+        $setting = $school->setting;
+// load next term
+       $nextTerm = match ($term->name) {
+    'First Term'  => 'second',
+    'Second Term' => 'third',
+    'Third Term'  => 'first',
+    default => null,
+};
 
+ // Determine the session to use for the fee
+$currentSession = $session->name; // e.g. 2025/2026
+$feeSession = $currentSession;
+
+if ($term->name === 'Third Term') {
+
+    [$startYear, $endYear] = explode('/', $currentSession);
+
+    $feeSession = ($startYear + 1) . '/' . ($endYear + 1);
+}
+
+ // Load next term fee
+    $nextTermFee = Fee::where('school_id', $school->id)
+        ->where('class_id', $student->class_id)
+        ->where('term', $nextTerm)
+        ->where('session', $feeSession)
+        ->first();
+
+        
         $results = Result::where('student_id', $student_id)
             ->where('term_id', $term_id)
             ->where('session_id', $session_id)
@@ -283,7 +314,7 @@ class ResultController extends Controller
         $total_students = count($ranked);
 
         return view('results.generate_result', compact(
-            'student', 'term', 'session', 'results', 'average', 'position', 'total_students', 'school'
+            'student', 'term', 'session', 'results', 'average', 'position', 'total_students', 'school', 'setting', 'nextTermFee'
         ));
     }
 
@@ -363,4 +394,121 @@ class ResultController extends Controller
 
         return view('results.class_ranking', compact('class', 'students', 'term_id', 'session_id'));
     }
+
+
+        // Load annual results
+    public function annualResult($student_id, $session_id)
+{
+    // Load student
+    $student = Student::with('schoolClass')->findOrFail($student_id);
+
+    // Load academic session
+    $session = AcademicSession::findOrFail($session_id);
+
+    // Load school
+    $school = School::find(Auth::user()->school_id);
+
+    // Load school settings
+    $setting = $school->setting;
+
+    // Fetch all results for this student in this session
+$results = Result::with(['subject', 'term'])
+    ->where('student_id', $student->id)
+    ->where('session_id', $session->id)
+    ->orderBy('subject_id')
+    ->get();
+
+
+
+
+    // Fetch all results for this student in this session
+
+   $cumulativeResults = $results->groupBy('subject_id')->map(function ($subjectResults) {
+
+    $first  = $subjectResults->firstWhere('term.name', 'First Term');
+    $second = $subjectResults->firstWhere('term.name', 'Second Term');
+    $third  = $subjectResults->firstWhere('term.name', 'Third Term');
+
+    $firstScore  = $first?->total_score ?? 0;
+    $secondScore = $second?->total_score ?? 0;
+    $thirdScore  = $third?->total_score ?? 0;
+
+    $total = $firstScore + $secondScore + $thirdScore;
+
+    $average = round($total / 3, 2);
+
+    $grade = '';
+$remark = '';
+[$grade, $remark] = $this->computeGrade($average);
+
+return (object)[
+    'subject' => $subjectResults->first()->subject,
+    'first'   => $firstScore,
+    'second'  => $secondScore,
+    'third'   => $thirdScore,
+    'total'   => $total,
+    'average' => $average,
+    'grade'   => $grade,
+    'remark'  => $remark,
+];
+});
+
+$annualTotal = $cumulativeResults->sum('total');
+
+$subjectCount = $cumulativeResults->count();
+
+$annualAverage = $subjectCount > 0
+    ? round($cumulativeResults->avg('average'), 2)
+    : 0;
+
+    // Get all students in the same class
+$classStudentIds = Student::where('class_id', $student->class_id)
+    ->pluck('id');
+
+// Calculate annual total for each student
+$classTotals = Result::select(
+        'student_id',
+        DB::raw('SUM(total_score) as annual_total')
+    )
+    ->whereIn('student_id', $classStudentIds)
+    ->where('session_id', $session->id)
+    ->groupBy('student_id')
+    ->orderByDesc('annual_total')
+    ->get();
+
+    $rank = 0;
+$prevTotal = null;
+$skip = 0;
+$realRanks = [];
+
+foreach ($classTotals as $row) {
+
+    if ($prevTotal === $row->annual_total) {
+        $skip++;
+    } else {
+        $rank += 1 + $skip;
+        $skip = 0;
+    }
+
+    $realRanks[$row->student_id] = $rank;
+
+    $prevTotal = $row->annual_total;
+}
+
+$annualPosition = $realRanks[$student->id] ?? null;
+
+$totalStudents = $classTotals->count();
+
+    return view('results.annual_result', compact(
+    'student',
+    'session',
+    'school',
+    'setting',
+    'cumulativeResults',
+    'annualTotal',
+    'annualAverage',
+    'annualPosition',
+    'totalStudents'
+));
+}
 }

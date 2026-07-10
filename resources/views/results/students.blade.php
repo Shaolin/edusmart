@@ -94,6 +94,18 @@
                                        class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md text-xs sm:text-sm shadow">
                                         👁️ View Result
                                     </a>
+                                    {{-- 📘 Annual Result --}}
+@if(request('term_id') == \App\Models\Term::where('name', 'Third Term')->value('id'))
+
+    <a href="{{ route('results.annual', [
+            'student_id' => $student->id,
+            'session_id' => request('session_id', \App\Models\AcademicSession::latest()->first()->id ?? 1)
+        ]) }}"
+       class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded-md text-xs sm:text-sm shadow">
+        📘 Annual Result
+    </a>
+
+@endif
                                 </div>
                             </td>
                         </tr>

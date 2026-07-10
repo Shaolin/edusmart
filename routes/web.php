@@ -1,32 +1,30 @@
 <?php
 
-use App\Services\WhatsAppService;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\FeeController;
-use App\Http\Controllers\LogoController;
-use App\Http\Controllers\TermController;
+use App\Http\Controllers\Admin\ClassSubjectTeacherController;
 use App\Http\Controllers\ClassController;
-use App\Http\Controllers\ResultController;
-use App\Http\Controllers\SchoolController;
+use App\Http\Controllers\ClassSubjectController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FeeController;
+use App\Http\Controllers\FeePaymentController;
+use App\Http\Controllers\GuardianController;
+use App\Http\Controllers\LogoController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReceiptController;
+use App\Http\Controllers\ResultController;
+use App\Http\Controllers\SchoolController;
+use App\Http\Controllers\SchoolSettingController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
-use App\Http\Controllers\TeacherController;
-use App\Http\Controllers\GuardianController;
-use App\Http\Controllers\DashboardController;
-
-
-use App\Http\Controllers\FeePaymentController;
-
-use App\Http\Controllers\ClassSubjectController;
-use App\Http\Controllers\TeacherDashboardController;
 use App\Http\Controllers\Teacher\AttendanceController;
 use App\Http\Controllers\Teacher\TeacherClassController;
 use App\Http\Controllers\Teacher\TeacherResultController;
 use App\Http\Controllers\Teacher\TeacherStudentController;
-use App\Http\Controllers\Admin\ClassSubjectTeacherController;
+use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\TeacherDashboardController;
+use App\Http\Controllers\TermController;
+use App\Services\WhatsAppService;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -260,6 +258,10 @@ Route::prefix('results')->group(function () {
     Route::get('/view/{student_id}/{term_id}/{session_id}', [ResultController::class, 'view'])->name('results.view');
     Route::get('/{student_id}/{term_id}/{session_id}/generate', [ResultController::class, 'generate'])->name('results.generate');
 
+    // Annual Result
+    Route::get('/annual/{student_id}/{session_id}', [ResultController::class, 'annualResult'])
+        ->name('results.annual');
+
     Route::get('/edit-all/{student_id}/{term_id}/{session_id}', [ResultController::class, 'editAll'])->name('results.editAll');
 
     Route::get('/class/{class_id}/ranking', [ResultController::class, 'classRanking'])->name('results.classRanking');
@@ -295,6 +297,10 @@ Route::middleware(['auth', 'teacher'])
         Route::get('/students', [TeacherStudentController::class, 'index'])->name('students');
         Route::get('/results', [TeacherResultController::class, 'index'])->name('results');
         Route::get('/classes', [TeacherClassController::class, 'index'])->name('classes');
+
+        // Annual Result
+        Route::get('/results/annual/{student_id}/{session_id}', [TeacherResultController::class, 'annualResult'])
+            ->name('results.annual');
 
          // New Attendance Routes
          Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
@@ -404,8 +410,15 @@ Route::delete('/admin/class-subject-teacher/{assignment}', [ClassSubjectControll
 // Forget Password
 // ===============================
 
+// ===============================
+// School Setting
+// ===============================
 
+Route::get('/school-settings', [SchoolSettingController::class, 'edit'])
+    ->name('school-settings.edit');
 
+Route::put('/school-settings', [SchoolSettingController::class, 'update'])
+    ->name('school-settings.update');
 
 
 // ===============================

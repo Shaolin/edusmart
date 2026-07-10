@@ -37,4 +37,8 @@ class School extends Model
     {
         return $this->hasMany(FeePayment::class);
     }
+    public function setting()
+{
+    return $this->hasOne(SchoolSetting::class);
+}
 }

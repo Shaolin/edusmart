@@ -104,6 +104,57 @@
                 <textarea name="teacher_remark" rows="4" class="w-full border rounded-lg p-3 dark:bg-gray-800 dark:text-gray-100"></textarea>
             </div>
 
+            
+<!-- Attendance Summary -->
+<div class="mb-6">
+    <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">
+        Attendance Summary
+    </h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+        <div>
+            <label class="block font-medium mb-2">
+                Time School Opened
+            </label>
+            <input
+                type="number"
+                name="school_opened"
+                min="0"
+                value="{{ old('school_opened', $attendanceSummary->school_opened ?? '') }}"
+                class="w-full border rounded-lg p-3 dark:bg-gray-800 dark:text-gray-100"
+            >
+        </div>
+
+        <div>
+            <label class="block font-medium mb-2">
+                Times Present
+            </label>
+            <input
+                type="number"
+                name="times_present"
+                min="0"
+                value="{{ old('times_present', $attendanceSummary->times_present ?? '') }}"
+                class="w-full border rounded-lg p-3 dark:bg-gray-800 dark:text-gray-100"
+            >
+        </div>
+
+        <div>
+            <label class="block font-medium mb-2">
+                Times Absent
+            </label>
+            <input
+                type="number"
+                name="times_absent"
+                min="0"
+                value="{{ old('times_absent', $attendanceSummary->times_absent ?? '') }}"
+                class="w-full border rounded-lg p-3 dark:bg-gray-800 dark:text-gray-100"
+            >
+        </div>
+
+    </div>
+</div>
+
             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg w-full sm:w-auto">
                 Save Results
             </button>

@@ -70,6 +70,22 @@
                                        class="text-green-600 hover:underline">
                                         View Result
                                     </a>
+                                     {{-- 📘 Annual Result --}}
+@php
+    $activeTerm = \App\Models\Term::where('is_active', 1)->first();
+@endphp
+
+@if($activeTerm && $activeTerm->name === 'Third Term')
+
+    <a href="{{ route('teachers.results.annual', [
+        'student_id' => $student->id,
+        'session_id' => \App\Models\AcademicSession::where('is_active', 1)->value('id')
+    ]) }}"
+       class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded-md text-xs sm:text-sm shadow">
+        📘 Annual Result
+    </a>
+
+@endif
                                 </td>
                             </tr>
                         @empty
