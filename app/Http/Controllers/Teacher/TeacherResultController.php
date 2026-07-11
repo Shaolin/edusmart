@@ -294,8 +294,10 @@ if ($term->name === 'Third Term') {
         abort(403, 'You are not authorized to download results for this student.');
     }
 
-    $sessionId = $request->query('session') ?? $request->query('session_id');
-    $termId    = $request->query('term') ?? $request->query('term_id');
+     $sessionId = $request->query('session') ?? $request->query('session_id');
+     $termId    = $request->query('term') ?? $request->query('term_id');
+
+
 
     $session = AcademicSession::find($sessionId) ?? AcademicSession::latest()->first();
     $term    = Term::find($termId) ?? Term::latest()->first();
@@ -306,7 +308,42 @@ if ($term->name === 'Third Term') {
         ->where('term_id', $term->id)
         ->get();
 
+       
+
     $school = School::find(Auth::user()->school_id);
+
+    $setting = $school->setting;
+// Attendance Summary
+    $attendanceSummary = ResultAttendanceSummary::where([
+    'student_id' => $student->id,
+    'session_id' => $session->id,
+    'term_id'    => $term->id,
+])->first();
+
+// Load next term
+$nextTerm = match ($term->name) {
+    'First Term'  => 'second',
+    'Second Term' => 'third',
+    'Third Term'  => 'first',
+    default       => null,
+};
+
+// Determine the session to use for the fee
+$currentSession = $session->name; // e.g. 2025/2026
+$feeSession = $currentSession;
+
+if ($term->name === 'Third Term') {
+    [$startYear, $endYear] = explode('/', $currentSession);
+
+    $feeSession = ($startYear + 1) . '/' . ($endYear + 1);
+}
+
+// Load next term fee
+$nextTermFee = Fee::where('school_id', $school->id)
+    ->where('class_id', $student->class_id)
+    ->where('term', $nextTerm)
+    ->where('session', $feeSession)
+    ->first();
 
     // Fetch all students in the same class
     $classStudentIds = Student::where('class_id', $student->class_id)->pluck('id');
@@ -338,8 +375,9 @@ if ($term->name === 'Third Term') {
 
     $position = $realRanks[$student->id] ?? null;
     $total_students = $classTotals->count();
+  
 
-    $data = compact('student', 'results', 'session', 'term', 'school', 'position', 'total_students');
+    $data = compact('student', 'results', 'session', 'term', 'school', 'position', 'total_students', 'nextTermFee', 'attendanceSummary', 'setting');
 
     try {
         if (! view()->exists('teachers.results.pdf')) {
@@ -348,8 +386,9 @@ if ($term->name === 'Third Term') {
 
         $pdf = Pdf::loadView('teachers.results.pdf', $data);
         $fileName = preg_replace('/\s+/', '_', $student->name) . '_Result.pdf';
+        
 
-        return $pdf->download($fileName);
+       return $pdf->download($fileName);
     } catch (\Exception $e) {
         return back()->with('error', 'PDF generation failed: ' . $e->getMessage());
     }
@@ -489,5 +528,148 @@ return view('teachers.results.annual_result', compact(
     'annualPosition',
     'totalStudents'
 ));
+}
+
+
+public function downloadAnnualResult($student_id, $session_id)
+{
+    // Copy EVERYTHING from annualResult()
+    // Load student
+    $student = Student::with('schoolClass')->findOrFail($student_id);
+
+    // Load academic session
+    $session = AcademicSession::findOrFail($session_id);
+
+    // Load school
+    $school = School::find(Auth::user()->school_id);
+
+    // Load school settings
+    $setting = $school->setting;
+
+    // Fetch all results for this student in this session
+$results = Result::with(['subject', 'term'])
+    ->where('student_id', $student->id)
+    ->where('session_id', $session->id)
+    ->orderBy('subject_id')
+    ->get();
+
+
+
+
+    // Fetch all results for this student in this session
+
+   $cumulativeResults = $results->groupBy('subject_id')->map(function ($subjectResults) {
+
+    $first  = $subjectResults->firstWhere('term.name', 'First Term');
+    $second = $subjectResults->firstWhere('term.name', 'Second Term');
+    $third  = $subjectResults->firstWhere('term.name', 'Third Term');
+
+    $firstScore  = $first?->total_score ?? 0;
+    $secondScore = $second?->total_score ?? 0;
+    $thirdScore  = $third?->total_score ?? 0;
+
+    $total = $firstScore + $secondScore + $thirdScore;
+
+  // Count how many terms actually have results
+$termsAttended = 0;
+
+if ($first) {
+    $termsAttended++;
+}
+
+if ($second) {
+    $termsAttended++;
+}
+
+if ($third) {
+    $termsAttended++;
+}
+
+$average = $termsAttended > 0
+    ? round($total / $termsAttended, 2)
+    : 0;
+
+    
+    $grade = '';
+$remark = '';
+[$grade, $remark] = $this->computeGrade($average);
+
+return (object)[
+    'subject' => $subjectResults->first()->subject,
+    'first'   => $firstScore,
+    'second'  => $secondScore,
+    'third'   => $thirdScore,
+    'total'   => $total,
+    'average' => $average,
+    'grade'   => $grade,
+    'remark'  => $remark,
+];
+});
+
+$annualTotal = $cumulativeResults->sum('total');
+
+$subjectCount = $cumulativeResults->count();
+
+$annualAverage = $subjectCount > 0
+    ? round($cumulativeResults->avg('average'), 2)
+    : 0;
+
+    // Get all students in the same class
+$classStudentIds = Student::where('class_id', $student->class_id)
+    ->pluck('id');
+
+// Calculate annual total for each student
+$classTotals = Result::select(
+        'student_id',
+        DB::raw('SUM(total_score) as annual_total')
+    )
+    ->whereIn('student_id', $classStudentIds)
+    ->where('session_id', $session->id)
+    ->groupBy('student_id')
+    ->orderByDesc('annual_total')
+    ->get();
+
+    $rank = 0;
+$prevTotal = null;
+$skip = 0;
+$realRanks = [];
+
+foreach ($classTotals as $row) {
+
+    if ($prevTotal === $row->annual_total) {
+        $skip++;
+    } else {
+        $rank += 1 + $skip;
+        $skip = 0;
+    }
+
+    $realRanks[$row->student_id] = $rank;
+
+    $prevTotal = $row->annual_total;
+}
+
+$annualPosition = $realRanks[$student->id] ?? null;
+
+$totalStudents = $classTotals->count();
+
+    
+
+$pdf = Pdf::loadView('teachers.results.annual_pdf', [
+    'student'          => $student,
+    'session'          => $session,
+    'school'           => $school,
+    'setting'          => $setting,
+    'cumulativeResults'=> $cumulativeResults,
+    'annualTotal'      => $annualTotal,
+    'annualAverage'    => $annualAverage,
+    'annualPosition'   => $annualPosition,
+    'totalStudents'    => $totalStudents,
+]);
+
+$pdf->setPaper('A4', 'portrait');
+
+return $pdf->download(
+    'Annual_Result_'.$student->admission_number.'.pdf'
+);
 }
 }

@@ -75,8 +75,8 @@
             </div>
         </div>
 
-       {{-- Attendance Summary --}}
-<div class="mb-6 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 p-4 relative z-10">
+            {{-- Attendance Summary --}}
+ <div class="mb-6 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 p-4 relative z-10">
 
     <h3 class="font-bold text-blue-700 dark:text-blue-400 uppercase border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
         Attendance Summary
@@ -84,7 +84,7 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-gray-800 dark:text-gray-100">
 
-        {{-- Time School Opened --}}
+        
         <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4 text-center shadow-sm">
             <p class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                 Time School Opened
@@ -95,7 +95,7 @@
             </p>
         </div>
 
-        {{-- Times Present --}}
+        
         <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4 text-center shadow-sm">
             <p class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                 Times Present
@@ -106,7 +106,7 @@
             </p>
         </div>
 
-        {{-- Times Absent --}}
+        
         <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4 text-center shadow-sm">
             <p class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                 Times Absent
@@ -243,10 +243,22 @@ class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-cente
     ✏️ Edit Results
 </a>
         
-            <a href="{{ route('teachers.results.download', [$student->id, 'session' => request('session'), 'term' => request('term')]) }}"
+            {{-- <a href="{{ route('teachers.results.download', [$student->id, 'session' => request('session'), 'term' => request('term')]) }}"
+               class="px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white rounded text-center flex-1 sm:flex-none">
+                📥 Download PDF
+            </a> --}}
+        
+            <a href="{{ route('teachers.results.download', [
+    'student' => $student->id,
+    'session_id' => $sessionId,
+    'term_id' => $termId,
+]) }}"
                class="px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white rounded text-center flex-1 sm:flex-none">
                 📥 Download PDF
             </a>
+
+
+          
         
             <a href=" {{ route('students.sendWhatsapp', $student->id) }}"
                target="_blank"

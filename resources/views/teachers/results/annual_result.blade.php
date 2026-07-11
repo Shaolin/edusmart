@@ -249,24 +249,29 @@
 
 </div>
             {{-- Print --}}
-            <div class="mt-8 text-center no-print">
+           <div class="mt-8 no-print">
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
 
-                <button
-                    onclick="window.print()"
-                    class="bg-green-700 hover:bg-green-800 text-white px-5 py-2 rounded">
+        <a href="{{ route('teachers.results.annual.download', [
+                'student' => $student->id,
+                'session_id' => $session->id,
+            ]) }}"
+           class="w-full sm:w-auto px-5 py-2 bg-gray-700 hover:bg-gray-800 text-white rounded text-center transition">
 
-                    🖨️ Print Annual Result
+            📥 Download Annual Result
 
-                </button>
+        </a>
 
-                
-            <a href=" {{ route('students.sendWhatsapp', $student->id) }}"
-               target="_blank"
-               class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-center flex-1 sm:flex-none">
-                📄 Send Result
-            </a>
+        <a href="{{ route('students.sendWhatsapp', $student->id) }}"
+           target="_blank"
+           class="w-full sm:w-auto px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-center transition">
 
-            </div>
+            📄 Send Result
+
+        </a>
+
+    </div>
+</div>
             
 
         </div>

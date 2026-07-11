@@ -301,6 +301,7 @@ Route::middleware(['auth', 'teacher'])
         // Annual Result
         Route::get('/results/annual/{student_id}/{session_id}', [TeacherResultController::class, 'annualResult'])
             ->name('results.annual');
+            
 
          // New Attendance Routes
          Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
@@ -358,6 +359,11 @@ Route::prefix('teacher')->middleware(['auth'])->group(function () {
         // Student  Result  download
     Route::get('/teacher/results/{student}/download', [TeacherResultController::class, 'download'])
     ->name('teachers.results.download');
+
+    Route::get(
+    '/teachers/results/annual/{student}/{session_id}/download',
+    [TeacherResultController::class, 'downloadAnnualResult']
+)->name('teachers.results.annual.download');
 
 });
 
