@@ -115,21 +115,29 @@
                                 <span class="text-gray-500 dark:text-gray-400 text-sm">Class:</span>
                                 <span class="font-medium text-gray-800 dark:text-gray-100">{{ $student->schoolClass->name ?? '-' }}</span>
                             </div>
-                            <div class="flex gap-3 mt-2">
-                                {{-- <a href="{{ route('teachers.results.edit', $student->id) }}"
-                                   class="text-blue-600 hover:underline text-sm">
-                                    Manage Results
-                                </a> --}}
-                                <a href="{{ route('teachers.results.create', $student->id) }}"
-                                        
-                                    class="text-blue-600 hover:underline">
-                                     Create Results
-                                 </a>
-                                <a href="{{ route('teachers.results.show', $student->id) }}"
-                                   class="text-green-600 hover:underline text-sm">
-                                    View Result
-                                </a>
-                            </div>
+                           <div class="flex flex-wrap gap-3 mt-2">
+
+    <a href="{{ route('teachers.results.create', $student->id) }}"
+       class="text-blue-600 hover:underline text-sm">
+        Create Results
+    </a>
+
+    <a href="{{ route('teachers.results.show', $student->id) }}"
+       class="text-green-600 hover:underline text-sm">
+        View Result
+    </a>
+
+    @if($activeTerm && $activeTerm->name === 'Third Term')
+        <a href="{{ route('teachers.results.annual', [
+            'student_id' => $student->id,
+            'session_id' => \App\Models\AcademicSession::where('is_active', 1)->value('id')
+        ]) }}"
+           class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded-md text-xs shadow">
+            📘 Annual Result
+        </a>
+    @endif
+
+</div>
                         </div>
                     @empty
                         <div class="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
