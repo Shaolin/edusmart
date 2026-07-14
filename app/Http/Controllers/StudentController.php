@@ -293,27 +293,43 @@ public function __construct(ResultService $resultService)
 
    public function sendResultWhatsapp($studentId)
    {
+
+   
        $student = Student::with(['school', 'schoolClass', 'guardian', 'results.subject'])->findOrFail($studentId);
+       
+      
+      
    
        // Get term and session (defaults to latest if not provided)
        $term = request('term_id') ? Term::find(request('term_id')) : Term::latest()->first();
        $session = request('session_id') ? AcademicSession::find(request('session_id')) : AcademicSession::latest()->first();
+
+   
+       
    
        $results = Result::where('student_id', $studentId)
            ->where('term_id', $term->id)
            ->where('session_id', $session->id)
            ->with('subject')
            ->get();
+           
+
+          
+          
+           
    
        if ($results->isEmpty()) {
            return redirect()->back()->with('warning', '⚠️ No results found for this student.');
        }
+        
+      
    
        // Compute position in class
        $class_id = $student->schoolClass->id ?? null;
        $position = $total_students = null;
    
        if ($class_id) {
+        
            $class_averages = Result::selectRaw('student_id, AVG(total_score) as avg_score')
                ->where('term_id', $term->id)
                ->where('session_id', $session->id)
@@ -321,10 +337,13 @@ public function __construct(ResultService $resultService)
                ->groupBy('student_id')
                ->orderByDesc('avg_score')
                ->get();
-   
+
+              
+              
            $ranked = $class_averages->pluck('student_id')->toArray();
            $position = $ranked ? array_search($studentId, $ranked) + 1 : null;
            $total_students = count($ranked);
+          
        }
    
        // Generate PDF
@@ -337,6 +356,9 @@ public function __construct(ResultService $resultService)
            'position' => $position,
            'total_students' => $total_students,
        ]);
+
+
+       
    
        // Truehost public directory
        $folder = $_SERVER['DOCUMENT_ROOT'] . '/results';
@@ -360,9 +382,12 @@ public function __construct(ResultService $resultService)
        // WhatsApp message
        $message = "Hello, your child's result is ready. Download PDF here: $pdfUrl";
        $encodedMessage = urlencode($message);
+
+       // DEBUG
+
    
        // Redirect to WhatsApp
-       return redirect("https://wa.me/{$parentPhone}?text={$encodedMessage}");
+        return redirect("https://wa.me/{$parentPhone}?text={$encodedMessage}");
    }
 
  // download reciept

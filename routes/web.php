@@ -112,6 +112,9 @@ Route::post('/students/bulk-store', [StudentController::class, 'bulkStore'])
 
     Route::get('/students/{student}/send-whatsapp', [StudentController::class, 'sendResultWhatsapp'])->name('students.sendWhatsapp');
 
+//     Route::get('/students/{student}/send-whatsapp', function ($student) {
+//     dd('Route reached', $student);
+// })->name('students.sendWhatsapp');
 
 
     
@@ -434,6 +437,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+Route::get('/test-wa', function () {
+    return redirect('https://wa.me/2348012345678?text=Hello');
 });
 
 require __DIR__.'/auth.php';

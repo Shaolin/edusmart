@@ -62,7 +62,11 @@ return view('teachers.students.index', [
 
     public function sendResultWhatsapp($studentId, Request $request)
 {
+  dd('Method reached');
+
     $teacher = auth()->user()->teacher;
+
+   
 
     // Make sure teacher manages this class
     $formClassIds = $teacher->formClasses()->pluck('id');

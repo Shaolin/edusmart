@@ -260,11 +260,23 @@ class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-cente
 
           
         
-            <a href=" {{ route('students.sendWhatsapp', $student->id) }}"
+            {{-- <a href=" {{ route('students.sendWhatsapp', $student->id) }}"
                target="_blank"
                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-center flex-1 sm:flex-none">
                 📄 Send Result
-            </a>
+            </a> --}}
+
+         
+<a href="{{ route('students.sendWhatsapp', [
+    'student' => $student->id,
+    'term_id' => $term->id,
+    'session_id' => $session->id,
+]) }}"
+   target="_blank"
+   class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-center flex-1 sm:flex-none">
+    📄 Send Result
+</a>
+
         
         </div>
         
