@@ -399,10 +399,7 @@ if (str_starts_with($parentPhone, '0')) {
        // Redirect to WhatsApp
          return redirect("https://wa.me/{$parentPhone}?text={$encodedMessage}");
 
-//         return response()->json([
-//     'parentPhone' => $parentPhone,
-//     'whatsapp_url' => "https://wa.me/{$parentPhone}?text={$encodedMessage}",
-// ]);
+
    }
 
  // download reciept
