@@ -262,13 +262,23 @@
 
         </a>
 
-        <a href="{{ route('students.sendWhatsapp', $student->id) }}"
+        {{-- <a href="{{ route('students.sendWhatsapp', $student->id) }}"
            target="_blank"
            class="w-full sm:w-auto px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-center transition">
 
             📄 Send Result
 
-        </a>
+        </a> --}}
+
+
+<a href="{{ route('teachers.results.annual.sendWhatsapp', [
+    'student' => $student->id,
+    'session_id' => $session->id,
+]) }}"
+   target="_blank"
+   class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">
+    📲 Send Annual Result
+</a>
 
     </div>
 </div>

@@ -672,4 +672,6 @@ return $pdf->download(
     'Annual_Result_'.$student->admission_number.'.pdf'
 );
 }
+
+
 }

@@ -368,6 +368,14 @@ Route::prefix('teacher')->middleware(['auth'])->group(function () {
     [TeacherResultController::class, 'downloadAnnualResult']
 )->name('teachers.results.annual.download');
 
+
+// Annual result
+
+Route::get(
+    '/teachers/results/annual/{student}/{session_id}/send-whatsapp',
+    [TeacherStudentController::class, 'sendAnnualResultWhatsapp']
+)->name('teachers.results.annual.sendWhatsapp');
+
 });
 
 
