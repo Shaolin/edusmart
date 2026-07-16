@@ -377,7 +377,17 @@ public function __construct(ResultService $resultService)
        $pdfUrl = url('results/' . $student->id . '.pdf');
    
        // Parent phone (international format)
-       $parentPhone = preg_replace('/^0/', '234', $student->guardian_phone ?? $student->guardian->phone);
+    //    $parentPhone = preg_replace('/^0/', '234', $student->guardian_phone ?? $student->guardian->phone);
+    $parentPhone = $student->guardian_phone ?? $student->guardian->phone;
+
+// Remove everything except digits
+$parentPhone = preg_replace('/\D/', '', $parentPhone);
+
+// Convert local Nigerian format (080...) to international (23480...)
+if (str_starts_with($parentPhone, '0')) {
+    $parentPhone = '234' . substr($parentPhone, 1);
+}
+
    
        // WhatsApp message
        $message = "Hello, your child's result is ready. Download PDF here: $pdfUrl";
