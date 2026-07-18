@@ -527,9 +527,12 @@ public function broadsheet(Request $request, $class_id)
     $sessionId = $request->session_id;
 
     // Load all subjects belonging to this school
-    $subjects = Subject::where('school_id', Auth::user()->school_id)
-        ->orderBy('name')
-        ->get();
+  
+
+        $subjects = $class->subjects()
+    ->orderBy('name')
+    ->distinct()
+    ->get();
 
     // Load all results for the selected class, term and session
     $results = Result::whereIn('student_id', $class->students->pluck('id'))
@@ -607,9 +610,10 @@ public function downloadBroadsheet(Request $request, $class_id)
     $term = \App\Models\Term::find($termId);
 $session = \App\Models\AcademicSession::find($sessionId);
 
-    $subjects = Subject::where('school_id', Auth::user()->school_id)
-        ->orderBy('name')
-        ->get();
+   $subjects = $class->subjects()
+    ->orderBy('name')
+    ->distinct()
+    ->get();
 
     $results = Result::whereIn('student_id', $class->students->pluck('id'))
         ->where('term_id', $termId)
