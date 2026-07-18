@@ -11,6 +11,7 @@ use App\Models\SchoolSetting;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Term;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -510,5 +511,169 @@ $totalStudents = $classTotals->count();
     'annualPosition',
     'totalStudents'
 ));
+}
+
+// broadsheet
+
+public function broadsheet(Request $request, $class_id)
+{
+    // Load the selected class and its students
+    $class = SchoolClass::with('students')
+        ->where('school_id', Auth::user()->school_id)
+        ->findOrFail($class_id);
+
+    // Get selected term and session
+    $termId = $request->term_id;
+    $sessionId = $request->session_id;
+
+    // Load all subjects belonging to this school
+    $subjects = Subject::where('school_id', Auth::user()->school_id)
+        ->orderBy('name')
+        ->get();
+
+    // Load all results for the selected class, term and session
+    $results = Result::whereIn('student_id', $class->students->pluck('id'))
+        ->where('term_id', $termId)
+        ->where('session_id', $sessionId)
+        ->get()
+        ->keyBy(function ($result) {
+            return $result->student_id . '_' . $result->subject_id;
+        });
+
+        //position
+
+        $positions = [];
+
+foreach ($class->students as $student) {
+
+    $studentResults = $results->filter(function ($result) use ($student) {
+        return $result->student_id == $student->id;
+    });
+
+    $average = $studentResults->count()
+        ? round($studentResults->avg('total_score'), 2)
+        : 0;
+
+    $positions[] = [
+        'student_id' => $student->id,
+        'average'    => $average,
+    ];
+
+    
+}
+
+usort($positions, function ($a, $b) {
+    return $b['average'] <=> $a['average'];
+});
+
+$rank = 0;
+$skip = 0;
+$previousAverage = null;
+$classPositions = [];
+
+foreach ($positions as $item) {
+
+    if ($previousAverage === $item['average']) {
+        $skip++;
+    } else {
+        $rank += 1 + $skip;
+        $skip = 0;
+    }
+
+    $classPositions[$item['student_id']] = $rank;
+
+    $previousAverage = $item['average'];
+}
+
+   return view('results.broadsheet', compact(
+    'class',
+    'subjects',
+    'results',
+    'termId',
+    'sessionId',
+    'classPositions'
+));
+}
+
+public function downloadBroadsheet(Request $request, $class_id)
+{
+    // Load the selected class and its students
+    $class = SchoolClass::with('students')
+        ->where('school_id', Auth::user()->school_id)
+        ->findOrFail($class_id);
+
+    $termId = $request->term_id;
+    $sessionId = $request->session_id;
+    $term = \App\Models\Term::find($termId);
+$session = \App\Models\AcademicSession::find($sessionId);
+
+    $subjects = Subject::where('school_id', Auth::user()->school_id)
+        ->orderBy('name')
+        ->get();
+
+    $results = Result::whereIn('student_id', $class->students->pluck('id'))
+        ->where('term_id', $termId)
+        ->where('session_id', $sessionId)
+        ->get()
+        ->keyBy(function ($result) {
+            return $result->student_id . '_' . $result->subject_id;
+        });
+
+    // Calculate positions
+    $positions = [];
+
+    foreach ($class->students as $student) {
+
+        $studentResults = $results->filter(function ($result) use ($student) {
+            return $result->student_id == $student->id;
+        });
+
+        $average = $studentResults->count()
+            ? round($studentResults->avg('total_score'), 2)
+            : 0;
+
+        $positions[] = [
+            'student_id' => $student->id,
+            'average'    => $average,
+        ];
+    }
+
+    usort($positions, function ($a, $b) {
+        return $b['average'] <=> $a['average'];
+    });
+
+    $rank = 0;
+    $skip = 0;
+    $previousAverage = null;
+    $classPositions = [];
+
+    foreach ($positions as $item) {
+
+        if ($previousAverage === $item['average']) {
+            $skip++;
+        } else {
+            $rank += 1 + $skip;
+            $skip = 0;
+        }
+
+        $classPositions[$item['student_id']] = $rank;
+
+        $previousAverage = $item['average'];
+    }
+
+   $pdf = Pdf::loadView('results.broadsheet-pdf', compact(
+    'class',
+    'subjects',
+    'results',
+    'termId',
+    'sessionId',
+    'term',
+    'session',
+    'classPositions'
+))->setPaper('a3', 'landscape');
+
+    return $pdf->download(
+        'Broadsheet_' . str_replace(' ', '_', $class->name) . '.pdf'
+    );
 }
 }

@@ -5,13 +5,13 @@
                 Students in {{ $class->name }}
             </h2>
 
-            <div class="flex flex-wrap gap-2">
+            {{-- <div class="flex flex-wrap gap-2">
                 <button id="toggle-dark" 
                         class="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded text-sm">
                     Toggle Dark Mode
                 </button>
 
-                {{-- 👁️ View Class Results --}}
+                
                 <a href="{{ route('results.classRanking', [
                         'class_id' => $class->id,
                         'term_id'  => request('term_id', \App\Models\Term::latest()->first()->id ?? 1),
@@ -20,7 +20,38 @@
                     class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-md shadow text-sm font-semibold">
                     👁️ View Class Results
                 </a>
-            </div>
+            </div> --}}
+
+            <div class="flex flex-wrap gap-2">
+
+    <button id="toggle-dark"
+            class="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded text-sm">
+        Toggle Dark Mode
+    </button>
+
+    {{-- 📊 Broadsheet --}}
+    <a href="{{ route('results.broadsheet', [
+            'class_id' => $class->id,
+            'term_id' => request('term_id', \App\Models\Term::latest()->first()->id ?? 1),
+            'session_id' => request('session_id', \App\Models\AcademicSession::latest()->first()->id ?? 1),
+        ]) }}"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md shadow text-sm font-semibold">
+        📊 Broadsheet
+    </a>
+
+    {{-- 👁️ View Class Results --}}
+    <a href="{{ route('results.classRanking', [
+            'class_id' => $class->id,
+            'term_id'  => request('term_id', \App\Models\Term::latest()->first()->id ?? 1),
+            'session_id' => request('session_id', \App\Models\AcademicSession::latest()->first()->id ?? 1)
+        ]) }}"
+        class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-md shadow text-sm font-semibold">
+        🏆 Class Ranking
+    </a>
+
+</div>
+
+
         </div>
     </x-slot>
 

@@ -268,6 +268,14 @@ Route::prefix('results')->group(function () {
     Route::get('/edit-all/{student_id}/{term_id}/{session_id}', [ResultController::class, 'editAll'])->name('results.editAll');
 
     Route::get('/class/{class_id}/ranking', [ResultController::class, 'classRanking'])->name('results.classRanking');
+//Broadsheet
+    Route::get('/results/broadsheet/{class_id}', [ResultController::class, 'broadsheet'])
+    ->name('results.broadsheet');
+
+  
+
+Route::get('/results/broadsheet/{class_id}/download', [ResultController::class, 'downloadBroadsheet'])
+    ->name('results.broadsheet.download');
 });
 
 // AcademicSessions
