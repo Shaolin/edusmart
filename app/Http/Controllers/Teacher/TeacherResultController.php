@@ -477,6 +477,16 @@ $annualAverage = $subjectCount > 0
     ? round($cumulativeResults->avg('average'), 2)
     : 0;
 
+    //promoted
+
+    $annualAverage = $subjectCount > 0
+    ? round($cumulativeResults->avg('average'), 2)
+    : 0;
+
+$promotionStatus = $annualAverage >= 40
+    ? 'Promoted'
+    : 'Not Promoted';
+
     // Get all students in the same class
 $classStudentIds = Student::where('class_id', $student->class_id)
     ->pluck('id');
@@ -526,7 +536,8 @@ return view('teachers.results.annual_result', compact(
     'annualTotal',
     'annualAverage',
     'annualPosition',
-    'totalStudents'
+    'totalStudents',
+     'promotionStatus'
 ));
 }
 

@@ -436,8 +436,26 @@ $results = Result::with(['subject', 'term'])
 
     $total = $firstScore + $secondScore + $thirdScore;
 
-    $average = round($total / 3, 2);
+      // Count how many terms actually have results
+$termsAttended = 0;
 
+if ($first) {
+    $termsAttended++;
+}
+
+if ($second) {
+    $termsAttended++;
+}
+
+if ($third) {
+    $termsAttended++;
+}
+
+$average = $termsAttended > 0
+    ? round($total / $termsAttended, 2)
+    : 0;
+
+    
     $grade = '';
 $remark = '';
 [$grade, $remark] = $this->computeGrade($average);
@@ -452,6 +470,8 @@ return (object)[
     'grade'   => $grade,
     'remark'  => $remark,
 ];
+
+   
 });
 
 $annualTotal = $cumulativeResults->sum('total');
@@ -461,6 +481,16 @@ $subjectCount = $cumulativeResults->count();
 $annualAverage = $subjectCount > 0
     ? round($cumulativeResults->avg('average'), 2)
     : 0;
+
+    //promoted
+
+    $annualAverage = $subjectCount > 0
+    ? round($cumulativeResults->avg('average'), 2)
+    : 0;
+
+$promotionStatus = $annualAverage >= 40
+    ? 'Promoted'
+    : 'Not Promoted';
 
     // Get all students in the same class
 $classStudentIds = Student::where('class_id', $student->class_id)
@@ -509,7 +539,8 @@ $totalStudents = $classTotals->count();
     'annualTotal',
     'annualAverage',
     'annualPosition',
-    'totalStudents'
+    'totalStudents',
+    'promotionStatus'
 ));
 }
 

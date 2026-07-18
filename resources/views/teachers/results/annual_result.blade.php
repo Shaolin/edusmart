@@ -244,6 +244,18 @@
                 {{ $totalStudents }}
             </p>
         </div>
+        <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
+    <p class="text-sm text-gray-500 dark:text-gray-400">
+        Promotion Status
+    </p>
+
+    <p class="text-2xl font-bold
+        {{ $promotionStatus == 'Promoted'
+            ? 'text-green-600 dark:text-green-400'
+            : 'text-red-600 dark:text-red-400' }}">
+        {{ $promotionStatus }}
+    </p>
+</div>
 
     </div>
 
