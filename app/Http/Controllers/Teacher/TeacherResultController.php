@@ -499,7 +499,7 @@ $mathPassed    = $mathematics && $mathematics->average >= 40;
 
 // Promotion rule
 $promotionStatus = (
-    $annualAverage >= 40 &&
+    $annualAverage >= 45 &&
     $englishPassed &&
     $mathPassed
 )
