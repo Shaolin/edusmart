@@ -484,13 +484,32 @@ $annualAverage = $subjectCount > 0
 
     //promoted
 
-    $annualAverage = $subjectCount > 0
+      // Annual average
+$annualAverage = $subjectCount > 0
     ? round($cumulativeResults->avg('average'), 2)
     : 0;
 
-$promotionStatus = $annualAverage >= 40
-    ? 'Promoted'
-    : 'Not Promoted';
+// Find English and Mathematics annual averages
+$english = $cumulativeResults->first(function ($result) {
+    return stripos($result->subject->name, 'English Language') !== false;
+});
+
+$mathematics = $cumulativeResults->first(function ($result) {
+    return stripos($result->subject->name, 'Mathematics') !== false
+        || stripos($result->subject->name, 'Math') !== false;
+});
+
+$englishPassed = $english && $english->average >= 40;
+$mathPassed    = $mathematics && $mathematics->average >= 40;
+
+// Promotion rule
+$promotionStatus = (
+    $annualAverage >= 40 &&
+    $englishPassed &&
+    $mathPassed
+)
+? 'Promoted'
+: 'Not Promoted';
 
     // Get all students in the same class
 $classStudentIds = Student::where('class_id', $student->class_id)
