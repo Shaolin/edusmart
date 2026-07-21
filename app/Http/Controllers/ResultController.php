@@ -491,15 +491,15 @@ $annualAverage = $subjectCount > 0
 
 // Find English and Mathematics annual averages
 $english = $cumulativeResults->first(function ($result) {
-    return stripos($result->subject->name, 'English Language') !== false;
+    return stripos($result->subject->name, 'English Language') !== false
+        || stripos($result->subject->name, 'English') !== false
+        || stripos($result->subject->name, 'Literacy') !== false;
 });
 
 $mathematics = $cumulativeResults->first(function ($result) {
-    $subject = strtolower($result->subject->name);
-
-    return str_contains($subject, 'mathematics')
-        || str_contains($subject, 'math')
-        || str_contains($subject, 'numeracy');
+    return stripos($result->subject->name, 'Mathematics') !== false
+        || stripos($result->subject->name, 'Math') !== false
+        || stripos($result->subject->name, 'Numeracy') !== false;
 });
 
 $englishPassed = $english && $english->average >= 40;
