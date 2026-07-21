@@ -178,33 +178,42 @@ width="70">
 
 <table class="summary">
 
-<tr>
+    <tr>
+        <td>
+            <strong>Annual Total:</strong>
+            {{ number_format($annualTotal, 2) }}
+        </td>
 
-<td>
-<strong>Annual Total:</strong>
-{{ number_format($annualTotal,2) }}
-</td>
+        <td>
+            <strong>Annual Average:</strong>
+            {{ number_format($annualAverage, 2) }}%
+        </td>
+    </tr>
 
-<td>
-<strong>Annual Average:</strong>
-{{ number_format($annualAverage,2) }}%
-</td>
+    <tr>
+        <td>
+            <strong>Annual Position:</strong>
+            {{ $annualPosition ?? '—' }}
+        </td>
 
-</tr>
+        <td>
+            <strong>Total Students:</strong>
+            {{ $totalStudents }}
+        </td>
+    </tr>
 
-<tr>
-
-<td>
-<strong>Annual Position:</strong>
-{{ $annualPosition }}
-</td>
-
-<td>
-<strong>Total Students:</strong>
-{{ $totalStudents }}
-</td>
-
-</tr>
+    <tr>
+        <td colspan="2"
+            style="
+                text-align:center;
+                font-weight:bold;
+                font-size:14px;
+                color:{{ $promotionStatus == 'Promoted' ? 'green' : 'red' }};
+            ">
+            Promotion Status:
+            {{ strtoupper($promotionStatus) }}
+        </td>
+    </tr>
 
 </table>
 
