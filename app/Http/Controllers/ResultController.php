@@ -495,8 +495,11 @@ $english = $cumulativeResults->first(function ($result) {
 });
 
 $mathematics = $cumulativeResults->first(function ($result) {
-    return stripos($result->subject->name, 'Mathematics') !== false
-        || stripos($result->subject->name, 'Math') !== false;
+    $subject = strtolower($result->subject->name);
+
+    return str_contains($subject, 'mathematics')
+        || str_contains($subject, 'math')
+        || str_contains($subject, 'numeracy');
 });
 
 $englishPassed = $english && $english->average >= 40;
