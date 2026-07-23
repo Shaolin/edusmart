@@ -254,6 +254,30 @@ $annualAverage = $subjectCount > 0
     ? round($cumulativeResults->avg('average'), 2)
     : 0;
 
+    // Determine promotion status
+$english = $cumulativeResults->first(function ($result) {
+    return stripos($result->subject->name, 'English Language') !== false
+        || stripos($result->subject->name, 'English') !== false
+        || stripos($result->subject->name, 'Literacy') !== false;
+});
+
+$mathematics = $cumulativeResults->first(function ($result) {
+    return stripos($result->subject->name, 'Mathematics') !== false
+        || stripos($result->subject->name, 'Math') !== false
+        || stripos($result->subject->name, 'Numeracy') !== false;
+});
+
+$englishPassed = $english && $english->average >= 40;
+$mathPassed = $mathematics && $mathematics->average >= 40;
+
+$promotionStatus = (
+    $annualAverage >= 45 &&
+    $englishPassed &&
+    $mathPassed
+)
+    ? 'Promoted'
+    : 'Not Promoted';
+
     // Get all students in the same class
 $classStudentIds = Student::where('class_id', $student->class_id)
     ->pluck('id');
@@ -304,6 +328,7 @@ $pdf = Pdf::loadView('teachers.results.annual_pdf', [
     'annualAverage'     => $annualAverage,
     'annualPosition'    => $annualPosition,
     'totalStudents'     => $totalStudents,
+    'promotionStatus'   => $promotionStatus, 
 ]);
 
 $pdf->setPaper('A4', 'portrait');
