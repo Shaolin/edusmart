@@ -459,4 +459,16 @@ Route::get('/test-wa', function () {
     return redirect('https://wa.me/2348012345678?text=Hello');
 });
 
+
+Route::get(
+    'results/results/board-excel/{class_id}/page',
+    [ResultController::class, 'boardExcelPage']
+)->name('results.board.excel.page');
+Route::get(
+    'results/results/board-excel/{class_id}',
+    [ResultController::class, 'boardExcel']
+)->name('results.board.excel');
+
+
+
 require __DIR__.'/auth.php';

@@ -39,6 +39,16 @@
         📊 Broadsheet
     </a>
 
+    {{-- 📥 Board Excel --}}
+<a href="{{ route('results.board.excel.page', [
+        'class_id' => $class->id,
+        'term_id' => request('term_id', \App\Models\Term::latest()->first()->id ?? 1),
+        'session_id' => request('session_id', \App\Models\AcademicSession::latest()->first()->id ?? 1),
+    ]) }}"
+    class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md shadow text-sm font-semibold">
+    📥 Board Excel
+</a>
+
     {{-- 👁️ View Class Results --}}
     <a href="{{ route('results.classRanking', [
             'class_id' => $class->id,

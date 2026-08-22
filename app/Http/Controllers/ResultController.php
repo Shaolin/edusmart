@@ -15,6 +15,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class ResultController extends Controller
 {
@@ -731,6 +733,125 @@ $session = \App\Models\AcademicSession::find($sessionId);
 
     return $pdf->download(
         'Broadsheet_' . str_replace(' ', '_', $class->name) . '.pdf'
+    );
+}
+
+public function boardExcelPage($class_id)
+{
+    $class = SchoolClass::where('school_id', Auth::user()->school_id)
+        ->findOrFail($class_id);
+
+    $subjects = $class->subjects()
+        ->orderBy('name')
+        ->distinct()
+        ->get();
+
+    $terms = Term::all();
+
+    $sessions = AcademicSession::all();
+
+    return view('results.board-excel', compact(
+        'class',
+        'subjects',
+        'terms',
+        'sessions'
+    ));
+}
+
+public function boardExcel(Request $request, $class_id)
+{
+    $class = SchoolClass::with('students')
+        ->where('school_id', Auth::user()->school_id)
+        ->findOrFail($class_id);
+
+    $termId = $request->term_id;
+    $sessionId = $request->session_id;
+    $subjectId = $request->subject_id;
+
+    $subject = Subject::where('school_id', Auth::user()->school_id)
+        ->findOrFail($subjectId);
+
+    $results = Result::whereIn(
+            'student_id',
+            $class->students->pluck('id')
+        )
+        ->where('subject_id', $subjectId)
+        ->where('term_id', $termId)
+        ->where('session_id', $sessionId)
+        ->get()
+        ->keyBy('student_id');
+
+    $spreadsheet = new Spreadsheet();
+
+    $sheet = $spreadsheet->getActiveSheet();
+
+    $sheet->setTitle('Result Upload');
+
+    // Headers
+    $sheet->setCellValue('A1', 'Student Name');
+    $sheet->setCellValue('B1', 'Reg Number');
+    $sheet->setCellValue('C1', 'Subject Code');
+    $sheet->setCellValue('D1', 'CA 1');
+    $sheet->setCellValue('E1', 'CA 2');
+    $sheet->setCellValue('F1', 'Exam Score');
+
+    $row = 2;
+
+    foreach ($class->students as $student) {
+
+        $result = $results[$student->id] ?? null;
+
+        $test = $result?->test_score ?? 0;
+        $exam = $result?->exam_score ?? 0;
+
+       // Generate whole-number CA scores for Board Excel only
+// CA1 + CA2 must always equal the original test score
+
+$test = (int) $test;
+
+$ca1 = match (true) {
+    $test >= 34 => 10,
+    $test >= 30 => 8,
+    $test >= 25 => 6,
+    $test >= 20 => 5,
+    $test >= 15 => 4,
+    $test >= 10 => 3,
+    default => $test,
+};
+
+$ca2 = $test - $ca1;
+        $sheet->setCellValue('A' . $row, $student->name);
+        $sheet->setCellValue('B' . $row, $student->admission_number);
+        $sheet->setCellValue('C' . $row, strtoupper($subject->name));
+        $sheet->setCellValue('D' . $row, $ca1);
+        $sheet->setCellValue('E' . $row, $ca2);
+        $sheet->setCellValue('F' . $row, $exam);
+
+        $row++;
+    }
+
+    // Basic formatting
+    $sheet->getStyle('A1:F1')->getFont()->setBold(true);
+
+    foreach (range('A', 'F') as $column) {
+        $sheet->getColumnDimension($column)->setAutoSize(true);
+    }
+
+    $filename = str_replace(' ', '_', $subject->name)
+        . '_' . str_replace(' ', '_', $class->name)
+        . '_Result.xlsx';
+
+    $writer = new Xlsx($spreadsheet);
+
+    return response()->streamDownload(
+        function () use ($writer) {
+            $writer->save('php://output');
+        },
+        $filename,
+        [
+            'Content-Type' =>
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]
     );
 }
 }
