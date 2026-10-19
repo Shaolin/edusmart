@@ -17,7 +17,15 @@ class Student extends Model
         'class_id',
         'guardian_id',
         'school_id',
+         'is_active',
     ];
+
+    protected function casts(): array
+{
+    return [
+        'is_active' => 'boolean',
+    ];
+}
 
     // Student belongs to a class
     public function schoolClass()

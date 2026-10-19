@@ -54,7 +54,10 @@ class DashboardController extends Controller
         // Admin Dashboard
         // ===============================
         return view('dashboard.index', [
-            'totalStudents'  => Student::where('school_id', $schoolId)->count(),
+            // 'totalStudents'  => Student::where('school_id', $schoolId)->count(),
+            'totalStudents'  => Student::where('school_id', $schoolId)
+    ->where('is_active', true)
+    ->count(),
             'totalTeachers'  => Teacher::where('school_id', $schoolId)->count(),
             'totalClasses'   => SchoolClass::where('school_id', $schoolId)->count(),
             'totalGuardians' => Guardian::where('school_id', $schoolId)->count(),

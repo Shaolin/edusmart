@@ -54,7 +54,8 @@ public function __construct(ResultService $resultService)
 
         // Base query: students belonging to the admin's school
         $query = Student::with(['schoolClass', 'guardian'])
-                        ->where('school_id', $user->school_id);
+                        ->where('school_id', $user->school_id)
+                          ->where('is_active', true);
 
         // Apply filters from request (name / class_id / gender)
         if ($name = request('name')) {
@@ -238,13 +239,65 @@ public function __construct(ResultService $resultService)
     /**
      * Remove the specified student from storage.
      */
-    public function destroy(Student $student)
-    {
-        $student->delete();
+    // public function destroy(Student $student)
+    // {
+    //     $student->delete();
 
-        return redirect()->route('students.index')
-                         ->with('success', 'Student deleted successfully.');
+    //     return redirect()->route('students.index')
+    //                      ->with('success', 'Student deleted successfully.');
+    // }
+
+    
+public function destroy(Student $student)
+{
+    $user = Auth::user();
+
+    // Ensure the student belongs to the logged-in user's school
+    if ($student->school_id !== $user->school_id) {
+        abort(403, 'Unauthorized action.');
     }
+
+    // Deactivate the student instead of permanently deleting the record
+    $student->update([
+        'is_active' => false,
+    ]);
+
+    return redirect()->route('students.index')
+                     ->with('success', 'Student deactivated successfully.');
+}
+
+//Activat / Reactivate students
+public function inactive()
+{
+    $user = Auth::user();
+
+    $students = Student::with(['schoolClass', 'guardian'])
+        ->where('school_id', $user->school_id)
+        ->where('is_active', false)
+        ->orderBy('name')
+        ->paginate(10);
+
+    return view('students.inactive', compact('students'));
+}
+
+public function reactivate(Student $student)
+{
+    $user = Auth::user();
+
+    // Ensure the student belongs to the logged-in user's school
+    if ((int) $student->school_id !== (int) $user->school_id) {
+        abort(403, 'Unauthorized action.');
+    }
+
+    $student->update([
+        'is_active' => true,
+    ]);
+
+    return redirect()->route('students.inactive')
+        ->with('success', 'Student reactivated successfully.');
+}
+
+
 
     /**
      * Promote students to next class (bulk action).

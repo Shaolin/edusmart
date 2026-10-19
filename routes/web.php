@@ -63,6 +63,14 @@ Route::view('/pricing', 'pricing')->name('pricing');
 // View (teachers + admins)
 Route::middleware(['auth'])->group(function () {
     Route::get('students', [StudentController::class, 'index'])->name('students.index');
+    // Inactive student management (admin only)
+Route::get('students/inactive', [StudentController::class, 'inactive'])
+    ->middleware('admin')
+    ->name('students.inactive');
+
+Route::patch('students/{student}/reactivate', [StudentController::class, 'reactivate'])
+    ->middleware('admin')
+    ->name('students.reactivate');
 
     // Put static routes before dynamic ones
     Route::get('students/create', [StudentController::class, 'create'])

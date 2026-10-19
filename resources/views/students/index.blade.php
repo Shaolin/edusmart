@@ -14,6 +14,10 @@
                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow transition-colors duration-300 text-sm sm:text-base w-full sm:w-auto text-center">
                         Add Student
                     </a>
+                    <a href="{{ route('students.inactive') }}"
+   class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
+    Inactive Students
+</a>
                 @endif
 
                
@@ -96,11 +100,22 @@
                                     <td class="px-4 sm:px-6 py-3 space-x-2">
                                         <a href="{{ route('students.show', $student->id) }}" class="text-blue-600 dark:text-blue-400 hover:underline">View</a>
                                         <a href="{{ route('students.edit', $student->id) }}" class="text-yellow-600 dark:text-yellow-400 hover:underline">Edit</a>
-                                        <form action="{{ route('students.destroy', $student->id) }}" method="POST" class="inline">
+                                        {{-- <form action="{{ route('students.destroy', $student->id) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="text-red-600 dark:text-red-400 hover:underline" onclick="return confirm('Are you sure?')">Delete</button>
-                                        </form>
+                                        </form> --}}
+                                        <form action="{{ route('students.destroy', $student->id) }}" method="POST" class="inline">
+    @csrf
+    @method('DELETE')
+    <button
+        type="submit"
+        class="text-red-600 dark:text-red-400 hover:underline"
+        onclick="return confirm('Deactivate this student? Their results and fee-payment history will be retained.')"
+    >
+        Deactivate
+    </button>
+</form>
                                     </td>
                                 </tr>
                             @endforeach
@@ -123,11 +138,22 @@
                             <div class="mt-3 flex flex-wrap gap-2">
                                 <a href="{{ route('students.show', $student->id) }}" class="px-3 py-1 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700">View</a>
                                 <a href="{{ route('students.edit', $student->id) }}" class="px-3 py-1 bg-yellow-500 text-white rounded-md text-xs hover:bg-yellow-600">Edit</a>
-                                <form action="{{ route('students.destroy', $student->id) }}" method="POST" class="inline">
+                                {{-- <form action="{{ route('students.destroy', $student->id) }}" method="POST" class="inline">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="px-3 py-1 bg-red-600 text-white rounded-md text-xs hover:bg-red-700" onclick="return confirm('Are you sure?')">Delete</button>
-                                </form>
+                                </form> --}}
+                                <form action="{{ route('students.destroy', $student->id) }}" method="POST" class="inline">
+    @csrf
+    @method('DELETE')
+    <button
+        type="submit"
+        class="px-3 py-1 bg-red-600 text-white rounded-md text-xs hover:bg-red-700"
+        onclick="return confirm('Deactivate this student? Their results and fee-payment history will be retained.')"
+    >
+        Deactivate
+    </button>
+</form>
                             </div>
                         </div>
                     @endforeach

@@ -22,7 +22,11 @@ class TeacherStudentController extends Controller
         $teacher = auth()->user()->teacher;
 
         // Flatten all students across teacher's classes
-        $students = $teacher->formClasses->flatMap->students;
+        // $students = $teacher->formClasses->flatMap->students;
+        $students = $teacher->formClasses
+    ->flatMap->students
+    ->where('is_active', true)
+    ->values();
 
         // --- Filtering ---
         if ($request->filled('name')) {

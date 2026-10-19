@@ -40,14 +40,27 @@ class ResultController extends Controller
         return view('results.select_class', compact('classes'));
     }
 
-    public function showStudents($class_id)
-    {
-        $class = SchoolClass::with('students')
-            ->where('school_id', Auth::user()->school_id)
-            ->findOrFail($class_id);
+    // public function showStudents($class_id)
+    // {
+    //     $class = SchoolClass::with('students')
+    //         ->where('school_id', Auth::user()->school_id)
+    //         ->findOrFail($class_id);
 
-        return view('results.students', compact('class'));
-    }
+    //     return view('results.students', compact('class'));
+    // }
+
+    
+public function showStudents($class_id)
+{
+    $class = SchoolClass::with(['students' => function ($query) {
+        $query->where('is_active', true);
+    }])
+        ->where('school_id', Auth::user()->school_id)
+        ->findOrFail($class_id);
+
+    return view('results.students', compact('class'));
+}
+
 
     public function createResult($student_id)
     {

@@ -26,7 +26,10 @@ class TeacherResultController extends Controller
         $teacher = auth()->user()->teacher;
         $classIds = $teacher->formClasses()->pluck('id');
 
-        $query = Student::with('schoolClass')->whereIn('class_id', $classIds);
+        // $query = Student::with('schoolClass')->whereIn('class_id', $classIds);
+        $query = Student::with('schoolClass')
+    ->whereIn('class_id', $classIds)
+    ->where('is_active', true);
 
         if ($request->filled('name')) {
             $query->where('name', 'like', '%' . $request->name . '%');
