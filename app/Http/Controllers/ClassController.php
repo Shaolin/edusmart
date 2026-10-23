@@ -296,6 +296,97 @@ class ClassController extends Controller
     }
 
     /**
+ * Show students for manual promotion
+ */
+public function showPromotionForm($classId)
+{
+    $user = Auth::user();
+
+    $class = SchoolClass::where('school_id', $user->school_id)
+        ->findOrFail($classId);
+
+    $students = $class->students()
+        ->where('is_active', true)
+        ->orderBy('name')
+        ->get();
+
+    $nextClasses = SchoolClass::where('school_id', $user->school_id)
+        ->where('id', '!=', $class->id)
+        ->orderBy('name')
+        ->get();
+
+    return view('classes.promote', compact(
+        'class',
+        'students',
+        'nextClasses'
+    ));
+}
+
+
+/**
+ * Process manual student promotion
+ */
+public function processManualPromotion(Request $request, $classId)
+{
+    $user = Auth::user();
+
+    $class = SchoolClass::where('school_id', $user->school_id)
+        ->findOrFail($classId);
+
+    $students = $class->students()
+        ->where('is_active', true)
+        ->get();
+
+    if ($students->isEmpty()) {
+        return redirect()->route('classes.index')
+            ->with('error', "No active students found in {$class->name}.");
+    }
+
+    
+$validated = $request->validate([
+    'students' => ['required', 'array'],
+    'students.*' => [
+        'required',
+        'integer',
+        'exists:classes,id',
+    ],
+]);
+
+
+    $studentIds = $students->pluck('id')->toArray();
+
+    if (count($validated['students']) !== count($studentIds) ||
+        array_diff(array_keys($validated['students']), $studentIds)) {
+        return back()->with('error', 'The student assignments are invalid. Please try again.');
+    }
+
+    $destinationIds = array_values($validated['students']);
+
+    $validDestinationIds = SchoolClass::where('school_id', $user->school_id)
+        ->where('id', '!=', $class->id)
+        ->whereIn('id', $destinationIds)
+        ->pluck('id')
+        ->toArray();
+
+    if (count($validDestinationIds) !== count(array_unique($destinationIds))) {
+        return back()->with('error', 'One or more destination classes are invalid.');
+    }
+
+    foreach ($validated['students'] as $studentId => $destinationClassId) {
+        $class->students()
+            ->where('id', $studentId)
+            ->where('is_active', true)
+            ->update([
+                'class_id' => $destinationClassId,
+            ]);
+    }
+
+    return redirect()->route('classes.index')
+        ->with('success', "Students from {$class->name} have been assigned to their selected classes.");
+}
+
+
+    /**
      * Helper: Only allow admins
      */
     private function authorizeAdmin()

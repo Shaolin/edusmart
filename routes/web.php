@@ -183,6 +183,15 @@ Route::middleware(['auth'])->group(function () {
     // Promote class (only for admins ideally)
     Route::post('/classes/{id}/promote', [ClassController::class, 'promoteClass'])
         ->name('classes.promote');
+
+      // Show manual student promotion page
+    Route::get('/classes/{classId}/promote-manually', [ClassController::class, 'showPromotionForm'])
+        ->name('classes.promote-manually');
+
+    
+Route::post('/classes/{classId}/promote-manually', [ClassController::class, 'processManualPromotion'])
+    ->name('classes.process-manual-promotion');
+
 });
 
 
